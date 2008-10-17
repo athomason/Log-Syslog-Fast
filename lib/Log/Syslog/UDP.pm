@@ -12,7 +12,7 @@ our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 our @EXPORT = qw();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::UDP', $VERSION);
@@ -32,7 +32,11 @@ Log::Syslog::UDP - Perl extension for very quickly sending syslog messages over 
 
 =head1 DESCRIPTION
 
-This module sends syslog messages over a non-blocking UDP socket.
+This module sends syslog messages over a non-blocking UDP socket. It works like
+L<Sys::Syslog> in setlogsock('udp') mode, but without the significant CPU
+overhead of that module when used for high-volume logging. Use of this
+specialized module is only necessary if 1) you must use UDP syslog as a messaging
+transport but 2) need to minimize the time spent in the logger.
 
 =head1 METHODS
 
@@ -54,15 +58,18 @@ The destination port where a syslogd is listening. Usually 514.
 
 =item $facility
 
-The syslog facility constant, eg 16 for 'local0'.
+The syslog facility constant, eg 16 for 'local0'. See RFC3164 section 4.1.1 (or
+E<lt>sys/syslog.hE<gt>) for appropriate constant values.
 
 =item $severity
 
-The syslog facility constant, eg 6 for 'info'.
+The syslog severity constant, eg 6 for 'info'. See RFC3164 section 4.1.1 (or
+E<lt>sys/syslog.hE<gt>) for appropriate constant values.
 
 =item $sender
 
-The originating hostname. Sys::Hostname::hostname is a reasonable source for this.
+The originating hostname. Sys::Hostname::hostname is typically a reasonable
+source for this.
 
 =item $name
 
@@ -72,8 +79,9 @@ The program name or tag to use for the message.
 
 =item $logger-E<gt>send($logmsg, [$time])
 
-Send a syslog message through the configured logger. Provide $time if you know,
-otherwise time() will be called for you.
+Send a syslog message through the configured logger. If $time is not provided,
+CORE::time() will be called for you. That doubles the syscalls per message, so
+try to pass it if you're calling time() yourself already.
 
 =back
 
@@ -83,7 +91,7 @@ None.
 
 =head1 SEE ALSO
 
-L<Sys::Syscall> is much more flexible, but a lot slower.
+L<Sys::Syslog>
 
 =head1 AUTHOR
 
