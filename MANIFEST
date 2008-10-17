@@ -1,0 +1,12 @@
+Changes
+Makefile.PL
+MANIFEST
+ppport.h
+README
+UDP.xs
+t/Log-Syslog-UDP.t
+lib/Log/Syslog/UDP.pm
+UDPSyslogger.cpp
+UDPSyslogger.h
+META.yml                                 Module meta-data (added by MakeMaker)
+typemap

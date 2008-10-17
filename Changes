@@ -1,0 +1,6 @@
+Revision history for Perl extension Log::Syslog::UDP.
+
+0.01  Wed Oct 15 17:21:24 2008
+	- original version; created by h2xs 1.23 with options
+		-Afn Log::Syslog::UDP
+
