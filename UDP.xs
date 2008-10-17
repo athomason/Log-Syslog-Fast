@@ -23,7 +23,12 @@ UDPSyslogger::new(hostname, port, facility, severity, sender, name);
     char* sender
     char* name
     CODE:
-        RETVAL = new UDPSyslogger(hostname, port, facility, severity, sender, name);
+        try {
+            RETVAL = new UDPSyslogger(hostname, port, facility, severity, sender, name);
+        }
+        catch (...) {
+            // squash exceptions and return undef on failure
+        }
         if (!RETVAL) XSRETURN_UNDEF;
     OUTPUT:
         RETVAL

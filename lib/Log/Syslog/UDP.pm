@@ -12,7 +12,7 @@ our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 our @EXPORT = qw();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::UDP', $VERSION);
