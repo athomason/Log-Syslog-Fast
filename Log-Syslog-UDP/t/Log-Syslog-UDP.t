@@ -1,6 +1,9 @@
-use Test::More tests => 33;
-BEGIN { use_ok('Log::Syslog::UDP', ':all') };
 use strict;
+use warnings;
+
+use Test::More tests => 33;
+
+BEGIN { use_ok('Log::Syslog::UDP', ':all') };
 
 my $logger = Log::Syslog::UDP->new("127.0.0.1", 514, 4, 6, "localhost", "test");
 ok($logger, "->new returns something");
