@@ -8,11 +8,58 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-our %EXPORT_TAGS = ();
-our @EXPORT_OK = ();
+use constant {
+    # severities
+    LOG_EMERG       => 0, # system is unusable
+    LOG_ALERT       => 1, # action must be taken immediately
+    LOG_CRIT        => 2, # critical conditions
+    LOG_ERR         => 3, # error conditions
+    LOG_WARNING     => 4, # warning conditions
+    LOG_NOTICE      => 5, # normal but significant condition
+    LOG_INFO        => 6, # informational
+    LOG_DEBUG       => 7, # debug-level messages
+
+    # facilities
+    LOG_KERN        => 0, # kernel messages
+    LOG_USER        => 1, # random user-level messages
+    LOG_MAIL        => 2, # mail system
+    LOG_DAEMON      => 3, # system daemons
+    LOG_AUTH        => 4, # security/authorization messages
+    LOG_SYSLOG      => 5, # messages generated internally by syslogd
+    LOG_LPR         => 6, # line printer subsystem
+    LOG_NEWS        => 7, # network news subsystem
+    LOG_UUCP        => 8, # UUCP subsystem
+    LOG_CRON        => 9, # clock daemon
+    LOG_AUTHPRIV    => 10, # security/authorization messages (private)
+    LOG_FTP         => 11, # ftp daemon
+    LOG_LOCAL0      => 16, # reserved for local use
+    LOG_LOCAL1      => 17, # reserved for local use
+    LOG_LOCAL2      => 18, # reserved for local use
+    LOG_LOCAL3      => 19, # reserved for local use
+    LOG_LOCAL4      => 20, # reserved for local use
+    LOG_LOCAL5      => 21, # reserved for local use
+    LOG_LOCAL6      => 22, # reserved for local use
+    LOG_LOCAL7      => 23, # reserved for local use
+};
+
+our %EXPORT_TAGS = (
+    facilities   => [qw/
+        LOG_EMERG LOG_ALERT LOG_CRIT LOG_ERR LOG_WARNING
+        LOG_NOTICE LOG_INFO LOG_DEBUG 
+    /],
+    severities => [qw/
+        LOG_KERN LOG_USER LOG_MAIL LOG_DAEMON LOG_AUTH
+        LOG_SYSLOG LOG_LPR LOG_NEWS LOG_UUCP LOG_CRON
+        LOG_AUTHPRIV LOG_FTP LOG_LOCAL0 LOG_LOCAL1 LOG_LOCAL2
+        LOG_LOCAL3 LOG_LOCAL4 LOG_LOCAL5 LOG_LOCAL6 LOG_LOCAL7
+    /],
+);
+@{ $EXPORT_TAGS{'all'} } = (@{ $EXPORT_TAGS{'facilities'} }, @{ $EXPORT_TAGS{'severities'} });
+
+our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::UDP', $VERSION);
@@ -42,9 +89,9 @@ transport but 2) need to minimize the time spent in the logger.
 
 =over 4
 
-=item UDPSyslogger-E<gt>new($hostname, $port, $facility, $severity, $sender, $name);
+=item Log::Syslog::UDP-E<gt>new($hostname, $port, $facility, $severity, $sender, $name);
 
-Create a new UDPSyslogger object with the following parameters:
+Create a new Log::Syslog::UDP object with the following parameters:
 
 =over 4
 
@@ -87,7 +134,11 @@ try to pass it if you're calling time() yourself already.
 
 =head1 EXPORT
 
-None.
+You may optionally import constants for severity and facility levels.
+
+  use Log::Syslog::UDP qw(:severities); # LOG_CRIT, LOG_NOTICE, LOG_DEBUG, etc
+  use Log::Syslog::UDP qw(:facilities); # LOG_CRON, LOG_LOCAL3, etc
+  use Log::Syslog::UDP qw(:all); # all of the above 
 
 =head1 SEE ALSO
 
