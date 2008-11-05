@@ -59,7 +59,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.06';
+our $VERSION = '0.08';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::UDP', $VERSION);
