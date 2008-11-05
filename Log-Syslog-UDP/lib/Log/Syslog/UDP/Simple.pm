@@ -52,15 +52,11 @@ sub new {
 }
 
 sub send {
-    my $self     = shift;
-    my $message  = shift;
-    my $time     = shift || time;
+    my $severity = $_[3] || $_[0][_ARGS][_SEVERITY];
+    my $facility = $_[4] || $_[0][_ARGS][_FACILITY];
 
     my $logger = $_[0][_LOGGERS][$facility][$severity];
     if (!$logger) {
-        my $severity = $_[3] || $_[0][_ARGS][_SEVERITY];
-        my $facility = $_[4] || $_[0][_ARGS][_FACILITY];
-
         my @args = @{ $_[0][_ARGS] };
         $args[_FACILITY] = $facility;
         $args[_SEVERITY] = $severity;
