@@ -1,22 +1,60 @@
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More 'no_plan';
+use IO::Socket::INET;
 
 BEGIN { use_ok('Log::Syslog::UDP', ':all') };
 
-my $logger = Log::Syslog::UDP->new("127.0.0.1", 514, 4, 6, "localhost", "test");
-ok($logger, "->new returns something");
-is(ref $logger, 'Log::Syslog::UDP', '->new returns a Log::Syslog::UDP object');
-eval {
-    $logger->send("testing ", time);
-};
-ok(!$@, "->send doesn't throw");
+my $test_port = 10514;
+my $listener = IO::Socket::INET->new(
+    Proto       => 'udp',
+    LocalHost   => 'localhost',
+    LocalPort   => $test_port,
+    Reuse       => 1,
+);
+ok($listener, "listen on port $test_port");
 
-eval {
-    $logger->send("testing ");
-};
-ok(!$@, "->send without time doesn't throw");
+my $logger = Log::Syslog::UDP->new("127.0.0.1", $test_port, 4, 6, "localhost", "test");
+ok($logger, "->new returns something");
+
+is(ref $logger, 'Log::Syslog::UDP', '->new returns a Log::Syslog::UDP object');
+
+{
+    eval {
+        $logger->send("testing 1", time);
+    };
+    ok(!$@, "->send with time doesn't throw");
+
+    # use select so test doesn't block on failure
+    vec(my $rin = '', fileno($listener), 1) = 1;
+    my $found = select(my $rout = $rin, undef, undef, 1);
+    ok($found, "didn't time out while listening");
+
+    if ($found) {
+        $listener->recv(my $buf, 256);
+        ok($buf =~ /^<38>/, "->send with time has the right priority");
+        ok($buf =~ /testing 1$/, "->send with time sends right payload");
+    }
+}
+
+{
+    eval {
+        $logger->send("testing 2");
+    };
+    ok(!$@, "->send without time doesn't throw");
+
+    # use select so test doesn't block on failure
+    vec(my $rin = '', fileno($listener), 1) = 1;
+    my $found = select(my $rout = $rin, undef, undef, 1);
+    ok($found, "didn't time out while listening");
+
+    if ($found) {
+        $listener->recv(my $buf, 256);
+        ok($buf =~ /^<38>/, "->send without time has the right priority");
+        ok($buf =~ /testing 2$/, "->send without time sends right payload");
+    }
+}
 
 is(LOG_EMERG,    0,  'LOG_EMERG');
 is(LOG_ALERT,    1,  'LOG_ALERT');
