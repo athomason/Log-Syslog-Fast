@@ -2,12 +2,13 @@
 
 #include <fcntl.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 
 UDPSyslogger::UDPSyslogger(char* hostname, int port, int facility, int severity, char* sender, char* name) :
     priority_( (facility << 3) | severity ),
