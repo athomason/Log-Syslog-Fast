@@ -60,7 +60,7 @@ UDPSyslogger::update_prefix(time_t t)
     last_time_ = t;
 
     char timestr[30];
-    strftime(timestr, 30, "%b %d %H:%M:%S", localtime(&t));
+    strftime(timestr, 30, "%b %e %H:%M:%S", localtime(&t));
 
     prefix_len_ = sprintf(linebuf_, "<%d>%s %s %s[%d]: ",
         priority_, timestr, sender_, name_, pid_
