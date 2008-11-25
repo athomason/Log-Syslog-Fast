@@ -56,6 +56,56 @@ is(ref $logger, 'Log::Syslog::UDP', '->new returns a Log::Syslog::UDP object');
     }
 }
 
+eval {
+    $test_port++;
+    $logger = Log::Syslog::UDP->new("127.0.0.1", $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
+
+    eval {
+        $logger->setReceiver("127.0.0.1", $test_port);
+    };
+    ok(!$@, "->setReceiver doesn't throw");
+
+    eval {
+        $logger->setPriority(LOG_NEWS, LOG_CRIT);
+    };
+    ok(!$@, "->setPriority doesn't throw");
+
+    eval {
+        $logger->setSender("otherhost");
+    };
+    ok(!$@, "->setSender doesn't throw");
+
+    eval {
+        $logger->setName("test2");
+    };
+    ok(!$@, "->setName doesn't throw");
+
+    $listener = IO::Socket::INET->new(
+        Proto       => 'udp',
+        LocalHost   => 'localhost',
+        LocalPort   => $test_port,
+        Reuse       => 1,
+    );
+
+    eval {
+        $logger->send("testing 3");
+    };
+    ok(!$@, "->send after accessors doesn't throw");
+
+    vec(my $rin = '', fileno($listener), 1) = 1;
+    my $found = select(my $rout = $rin, undef, undef, 1);
+    ok($found, "didn't time out while listening");
+
+    if ($found) {
+        $listener->recv(my $buf, 256);
+        ok($buf, "send after setReceiver went to correct port");
+        ok($buf =~ /^<58>/, "->send after setPriority has the right priority");
+        ok($buf =~ /otherhost/, "->send after setSender has the right sender");
+        ok($buf =~ /test2\[/, "->send after setName has the right name");
+        ok($buf =~ /testing 3$/, "->send after accessors sends right payload");
+    }
+};
+
 is(LOG_EMERG,    0,  'LOG_EMERG');
 is(LOG_ALERT,    1,  'LOG_ALERT');
 is(LOG_CRIT,     2,  'LOG_CRIT');
