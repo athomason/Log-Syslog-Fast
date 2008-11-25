@@ -11,16 +11,27 @@
 #include <unistd.h>
 
 UDPSyslogger::UDPSyslogger(char* hostname, int port, int facility, int severity, char* sender, char* name) :
-    priority_( (facility << 3) | severity ),
     pid_(getpid())
+{
+    setReceiver(hostname, port);
+    setSenderWithoutUpdate(sender);
+    setNameWithoutUpdate(name);
+    setPriorityWithoutUpdate(facility, severity);
+    updatePrefix();
+}
+
+UDPSyslogger::~UDPSyslogger()
+{
+    close(sock_);
+}
+
+void
+UDPSyslogger::setReceiver(char* hostname, int port)
 {
     // resolve the remote host
     struct hostent* host = gethostbyname(hostname);
     if (!host || !host->h_addr_list || !host->h_addr_list[0])
         throw "resolve failure";
-
-    strncpy(sender_, sender, sizeof(sender_) - 1);
-    strncpy(name_,   name,   sizeof(name_)   - 1);
 
     // set up a socket
     sock_ = socket(AF_INET, SOCK_DGRAM, 0); // let kernel assign local port
@@ -44,19 +55,28 @@ UDPSyslogger::UDPSyslogger(char* hostname, int port, int facility, int severity,
     if (connect(sock_, (const struct sockaddr*) &raddress, sizeof raddress)) {
         throw "connect failure";
     }
-
-    update_prefix(time(0));
 }
 
-UDPSyslogger::~UDPSyslogger()
-{
-    close(sock_);
-}
-
-inline
 void
-UDPSyslogger::update_prefix(time_t t)
+UDPSyslogger::setPriorityWithoutUpdate(int facility, int severity)
 {
+    priority_ = (facility << 3) | severity;
+}
+
+void
+UDPSyslogger::setSenderWithoutUpdate(char* sender)
+{
+    strncpy(sender_, sender, sizeof(sender_) - 1);
+}
+
+void
+UDPSyslogger::setNameWithoutUpdate(char* name)
+{
+    strncpy(name_, name, sizeof(name_)   - 1);
+}
+
+void
+UDPSyslogger::updatePrefix(time_t t) {
     last_time_ = t;
 
     char timestr[30];
@@ -82,7 +102,7 @@ UDPSyslogger::send(char* msg, int len, time_t t)
 {
     // update the prefix if seconds have rolled over
     if (t != last_time_)
-        update_prefix(t);
+        updatePrefix(t);
 
     // paste the message into linebuf just past where the prefix was placed
     int msg_len = min(len, LOG_BUFSIZE - prefix_len_);

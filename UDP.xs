@@ -44,3 +44,21 @@ ALIAS:
     Log::Syslog::UDP::emit = 1
 CODE:
     THIS->send(logmsg, strlen(logmsg), now);
+
+void
+UDPSyslogger::setReceiver(hostname, port)
+    char* hostname
+    int port
+
+void
+UDPSyslogger::setPriority(facility, severity)
+    int facility
+    int severity
+
+void
+UDPSyslogger::setSender(sender)
+    char* sender
+
+void
+UDPSyslogger::setName(name)
+    char* name

@@ -13,9 +13,30 @@ public:
 
     void send(char* msg, int len, time_t t);
 
+    void setReceiver(char* hostname, int port);
+
+    void setPriority(int facility, int severity) {
+        setPriorityWithoutUpdate(facility, severity);
+        updatePrefix();
+    }
+
+    void setSender(char* sender) {
+        setSenderWithoutUpdate(sender);
+        updatePrefix();
+    }
+
+    void setName(char* name) {
+        setNameWithoutUpdate(name);
+        updatePrefix();
+    }
+
 protected:
 
-    void update_prefix(time_t t);
+    void setPriorityWithoutUpdate(int facility, int severity);
+    void setSenderWithoutUpdate(char* sender);
+    void setNameWithoutUpdate(char* name);
+
+    void updatePrefix(time_t t = time(NULL));
 
     // configuration
     int    priority_;                // RFC3164/4.1.1 PRI Part
