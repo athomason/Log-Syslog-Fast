@@ -30,11 +30,17 @@ public:
         updatePrefix();
     }
 
+    void setPid(int pid) {
+        setPidWithoutUpdate(pid);
+        updatePrefix();
+    }
+
 protected:
 
     void setPriorityWithoutUpdate(int facility, int severity);
     void setSenderWithoutUpdate(char* sender);
     void setNameWithoutUpdate(char* name);
+    void setPidWithoutUpdate(int pid);
 
     void updatePrefix(time_t t = time(NULL));
 

@@ -1,4 +1,10 @@
 Revision history for Perl extension Log::Syslog::UDP.
+0.14  Wed Nov 26 11:23:01 PST 2008
+        - Add pod for accessors.
+        - Add non-camel-case aliases for accessors.
+        - Add accessor for setting pid.
+0.13  Mon Nov 26 11:23:01 PST 2008
+        - Add setters for things clients might want to change.
 0.12  Tue Nov 18 17:18:00 2008
 	- Use more concise strftime format.
 0.11  Mon Nov 17 16:32:22 2008
