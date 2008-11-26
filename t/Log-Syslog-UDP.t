@@ -61,24 +61,29 @@ eval {
     $logger = Log::Syslog::UDP->new("127.0.0.1", $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
 
     eval {
-        $logger->setReceiver("127.0.0.1", $test_port);
+        $logger->set_receiver("127.0.0.1", $test_port);
     };
-    ok(!$@, "->setReceiver doesn't throw");
+    ok(!$@, "->set_receiver doesn't throw");
 
     eval {
-        $logger->setPriority(LOG_NEWS, LOG_CRIT);
+        $logger->set_priority(LOG_NEWS, LOG_CRIT);
     };
-    ok(!$@, "->setPriority doesn't throw");
+    ok(!$@, "->set_priority doesn't throw");
 
     eval {
-        $logger->setSender("otherhost");
+        $logger->set_sender("otherhost");
     };
-    ok(!$@, "->setSender doesn't throw");
+    ok(!$@, "->set_sender doesn't throw");
 
     eval {
-        $logger->setName("test2");
+        $logger->set_name("test2");
     };
-    ok(!$@, "->setName doesn't throw");
+    ok(!$@, "->set_name doesn't throw");
+
+    eval {
+        $logger->set_pid("12345");
+    };
+    ok(!$@, "->set_name doesn't throw");
 
     $listener = IO::Socket::INET->new(
         Proto       => 'udp',
@@ -102,6 +107,7 @@ eval {
         ok($buf =~ /^<58>/, "->send after setPriority has the right priority");
         ok($buf =~ /otherhost/, "->send after setSender has the right sender");
         ok($buf =~ /test2\[/, "->send after setName has the right name");
+        ok($buf =~ /\[12345\]/, "->send after setName has the right pid");
         ok($buf =~ /testing 3$/, "->send after accessors sends right payload");
     }
 };

@@ -49,16 +49,30 @@ void
 UDPSyslogger::setReceiver(hostname, port)
     char* hostname
     int port
+ALIAS:
+    Log::Syslog::UDP::set_receiver = 1
 
 void
 UDPSyslogger::setPriority(facility, severity)
     int facility
     int severity
+ALIAS:
+    Log::Syslog::UDP::set_priority = 1
 
 void
 UDPSyslogger::setSender(sender)
     char* sender
+ALIAS:
+    Log::Syslog::UDP::set_sender = 1
 
 void
 UDPSyslogger::setName(name)
     char* name
+ALIAS:
+    Log::Syslog::UDP::set_name = 1
+
+void
+UDPSyslogger::setPid(pid)
+    int pid
+ALIAS:
+    Log::Syslog::UDP::set_pid = 1

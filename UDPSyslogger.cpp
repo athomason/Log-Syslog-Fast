@@ -76,6 +76,12 @@ UDPSyslogger::setNameWithoutUpdate(char* name)
 }
 
 void
+UDPSyslogger::setPidWithoutUpdate(int pid)
+{
+    pid_ = pid;
+}
+
+void
 UDPSyslogger::updatePrefix(time_t t) {
     last_time_ = t;
 

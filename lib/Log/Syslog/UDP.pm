@@ -59,7 +59,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::UDP', $VERSION);
@@ -129,6 +129,26 @@ The program name or tag to use for the message.
 Send a syslog message through the configured logger. If $time is not provided,
 CORE::time() will be called for you. That doubles the syscalls per message, so
 try to pass it if you're calling time() yourself already.
+
+=item $logger-E<gt>set_receiver($hostname, $port)
+
+Change the destination host and port.
+
+=item $logger-E<gt>set_priority($facility, $severity)
+
+Change the syslog facility and severity.
+
+=item $logger-E<gt>set_sender($sender)
+
+Change what is sent as the hostname of the sender.
+
+=item $logger-E<gt>set_name($name)
+
+Change what is sent as the name of the sending program.
+
+=item $logger-E<gt>set_pid($name)
+
+Change what is sent as the process id of the sending program.
 
 =back
 
