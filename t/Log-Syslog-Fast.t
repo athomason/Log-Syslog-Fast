@@ -4,7 +4,7 @@ use warnings;
 use Test::More 'no_plan';
 use IO::Socket::INET;
 
-BEGIN { use_ok('Log::Syslog::UDP', ':all') };
+BEGIN { use_ok('Log::Syslog::Fast', ':all') };
 
 my $test_port = 10514;
 my $listener = IO::Socket::INET->new(
@@ -15,10 +15,10 @@ my $listener = IO::Socket::INET->new(
 );
 ok($listener, "listen on port $test_port");
 
-my $logger = Log::Syslog::UDP->new("127.0.0.1", $test_port, 4, 6, "localhost", "test");
+my $logger = Log::Syslog::Fast->new(LOG_UDP, "127.0.0.1", $test_port, 4, 6, "localhost", "test");
 ok($logger, "->new returns something");
 
-is(ref $logger, 'Log::Syslog::UDP', '->new returns a Log::Syslog::UDP object');
+is(ref $logger, 'Log::Syslog::Fast', '->new returns a Log::Syslog::Fast object');
 
 {
     eval {
@@ -58,10 +58,10 @@ is(ref $logger, 'Log::Syslog::UDP', '->new returns a Log::Syslog::UDP object');
 
 eval {
     $test_port++;
-    $logger = Log::Syslog::UDP->new("127.0.0.1", $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
+    $logger = Log::Syslog::Fast->new(LOG_UDP, "127.0.0.1", $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
 
     eval {
-        $logger->set_receiver("127.0.0.1", $test_port);
+        $logger->set_receiver(LOG_UDP, "127.0.0.1", $test_port);
     };
     ok(!$@, "->set_receiver doesn't throw");
 

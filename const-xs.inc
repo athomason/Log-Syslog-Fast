@@ -20,12 +20,12 @@ constant(sv)
            Second, if present, is found value */
         switch (type) {
         case PERL_constant_NOTFOUND:
-          sv = sv_2mortal(newSVpvf("%s is not a valid Log::Syslog::UDP macro", s));
+          sv = sv_2mortal(newSVpvf("%s is not a valid Log::Syslog::Fast macro", s));
           PUSHs(sv);
           break;
         case PERL_constant_NOTDEF:
           sv = sv_2mortal(newSVpvf(
-	    "Your vendor has not defined Log::Syslog::UDP macro %s, used", s));
+	    "Your vendor has not defined Log::Syslog::Fast macro %s, used", s));
           PUSHs(sv);
           break;
 	/* Uncomment this if you need to return IVs
@@ -81,7 +81,7 @@ constant(sv)
           break; */
         default:
           sv = sv_2mortal(newSVpvf(
-	    "Unexpected return type %d while processing Log::Syslog::UDP macro %s, used",
+	    "Unexpected return type %d while processing Log::Syslog::Fast macro %s, used",
                type, s));
           PUSHs(sv);
         }

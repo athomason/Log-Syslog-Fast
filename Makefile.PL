@@ -3,16 +3,16 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
-    NAME              => 'Log::Syslog::UDP',
-    VERSION_FROM      => 'lib/Log/Syslog/UDP.pm', # finds $VERSION
+    NAME              => 'Log::Syslog::Fast',
+    VERSION_FROM      => 'lib/Log/Syslog/Fast.pm', # finds $VERSION
     PREREQ_PM         => {}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/Log/Syslog/UDP.pm', # retrieve abstract from module
+      (ABSTRACT_FROM  => 'lib/Log/Syslog/Fast.pm', # retrieve abstract from module
        AUTHOR         => 'Adam Thomason <athomason@sixapart.com>') : ()),
     LIBS              => ['-lstdc++'], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
     INC               => '-I.', # e.g., '-I. -I/usr/include/other'
-    OBJECT            => 'UDPSyslogger.o UDP.o', # link all the C files too
+    OBJECT            => 'FastSyslogger.o Fast.o', # link all the C files too
     XSOPT             => '-C++',
     CCFLAGS           => '-g',
     CC                => 'g++',
@@ -24,7 +24,7 @@ if  (eval {require ExtUtils::Constant; 1}) {
   # changes.
   my @names = (qw());
   ExtUtils::Constant::WriteConstants(
-                                     NAME         => 'Log::Syslog::UDP',
+                                     NAME         => 'Log::Syslog::Fast',
                                      NAMES        => \@names,
                                      DEFAULT_TYPE => 'IV',
                                      C_FILE       => 'const-c.inc',
