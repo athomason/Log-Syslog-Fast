@@ -1,4 +1,4 @@
-package Log::Syslog::UDP;
+package Log::Syslog::Fast;
 
 use 5.008005;
 use strict;
@@ -9,6 +9,10 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 use constant {
+    # protocols
+    LOG_UDP         => 0, # UDP
+    LOG_TCP         => 1, # TCP
+
     # severities
     LOG_EMERG       => 0, # system is unusable
     LOG_ALERT       => 1, # action must be taken immediately
@@ -43,9 +47,12 @@ use constant {
 };
 
 our %EXPORT_TAGS = (
+    protos   => [qw/
+        LOG_TCP LOG_UDP
+    /],
     facilities   => [qw/
         LOG_EMERG LOG_ALERT LOG_CRIT LOG_ERR LOG_WARNING
-        LOG_NOTICE LOG_INFO LOG_DEBUG 
+        LOG_NOTICE LOG_INFO LOG_DEBUG
     /],
     severities => [qw/
         LOG_KERN LOG_USER LOG_MAIL LOG_DAEMON LOG_AUTH
@@ -54,7 +61,11 @@ our %EXPORT_TAGS = (
         LOG_LOCAL3 LOG_LOCAL4 LOG_LOCAL5 LOG_LOCAL6 LOG_LOCAL7
     /],
 );
-@{ $EXPORT_TAGS{'all'} } = (@{ $EXPORT_TAGS{'facilities'} }, @{ $EXPORT_TAGS{'severities'} });
+@{ $EXPORT_TAGS{'all'} } = (
+    @{ $EXPORT_TAGS{'protos'} },
+    @{ $EXPORT_TAGS{'facilities'} },
+    @{ $EXPORT_TAGS{'severities'} }
+);
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
@@ -62,22 +73,24 @@ our @EXPORT = qw();
 our $VERSION = '0.14';
 
 require XSLoader;
-XSLoader::load('Log::Syslog::UDP', $VERSION);
+XSLoader::load('Log::Syslog::Fast', $VERSION);
 
 1;
 __END__
 
 =head1 NAME
 
-Log::Syslog::UDP - Perl extension for very quickly sending syslog messages over UDP.
+Log::Syslog::Fast - Perl extension for very quickly sending syslog messages over TCP/UDP.
 
 =head1 SYNOPSIS
 
-  use Log::Syslog::UDP;
-  my $logger = Log::Syslog::UDP->new("127.0.0.1", 514, 16, 6, "mymachine", "logger");
+  use Log::Syslog::Fast;
+  my $logger = Log::Syslog::Fast->new(LOG_UDP, "127.0.0.1", 514, 16, 6, "mymachine", "logger");
   $logger->send("log message", time);
 
 =head1 DESCRIPTION
+
+XXX Update for tcp
 
 This module sends syslog messages over a non-blocking UDP socket. It works like
 L<Sys::Syslog> in setlogsock('udp') mode, but without the significant CPU
@@ -89,11 +102,15 @@ transport but 2) need to minimize the time spent in the logger.
 
 =over 4
 
-=item Log::Syslog::UDP-E<gt>new($hostname, $port, $facility, $severity, $sender, $name);
+=item Log::Syslog::Fast-E<gt>new($proto, $hostname, $port, $facility, $severity, $sender, $name);
 
-Create a new Log::Syslog::UDP object with the following parameters:
+Create a new Log::Syslog::Fast object with the following parameters:
 
 =over 4
+
+=item $proto
+
+The transport protocol, either LOG_TCP or LOG_UDP.
 
 =item $hostname
 
@@ -156,9 +173,10 @@ Change what is sent as the process id of the sending program.
 
 You may optionally import constants for severity and facility levels.
 
-  use Log::Syslog::UDP qw(:severities); # LOG_CRIT, LOG_NOTICE, LOG_DEBUG, etc
-  use Log::Syslog::UDP qw(:facilities); # LOG_CRON, LOG_LOCAL3, etc
-  use Log::Syslog::UDP qw(:all); # all of the above 
+  use Log::Syslog::Fast qw(:protos); # LOG_TCP and LOG_UDP
+  use Log::Syslog::Fast qw(:severities); # LOG_CRIT, LOG_NOTICE, LOG_DEBUG, etc
+  use Log::Syslog::Fast qw(:facilities); # LOG_CRON, LOG_LOCAL3, etc
+  use Log::Syslog::Fast qw(:all); # all of the above
 
 =head1 SEE ALSO
 

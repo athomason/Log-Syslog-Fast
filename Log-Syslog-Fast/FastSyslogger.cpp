@@ -1,5 +1,6 @@
-#include "UDPSyslogger.h"
+#include "FastSyslogger.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -10,40 +11,28 @@
 #include <time.h>
 #include <unistd.h>
 
-UDPSyslogger::UDPSyslogger(char* hostname, int port, int facility, int severity, char* sender, char* name) :
+FastSyslogger::FastSyslogger(int proto, char* hostname, int port, int facility, int severity, char* sender, char* name) :
     pid_(getpid())
 {
-    setReceiver(hostname, port);
+    setReceiver(proto, hostname, port);
     setSenderWithoutUpdate(sender);
     setNameWithoutUpdate(name);
     setPriorityWithoutUpdate(facility, severity);
     updatePrefix();
 }
 
-UDPSyslogger::~UDPSyslogger()
+FastSyslogger::~FastSyslogger()
 {
     close(sock_);
 }
 
 void
-UDPSyslogger::setReceiver(char* hostname, int port)
+FastSyslogger::setReceiver(int proto, char* hostname, int port)
 {
     // resolve the remote host
     struct hostent* host = gethostbyname(hostname);
     if (!host || !host->h_addr_list || !host->h_addr_list[0])
         throw "resolve failure";
-
-    // set up a socket
-    sock_ = socket(AF_INET, SOCK_DGRAM, 0); // let kernel assign local port
-    if (sock_ < 0)
-        throw "socket failure";
-
-    // make the socket non-blocking
-    int flags = fcntl(sock_, F_GETFL, 0);
-    fcntl(sock_, F_SETFL, flags | O_NONBLOCK);
-    flags = fcntl(sock_, F_GETFL, 0);
-    if (!(flags & O_NONBLOCK))
-        throw "nonblock failure";
 
     // create the remote host's address
     struct sockaddr_in raddress;
@@ -51,38 +40,59 @@ UDPSyslogger::setReceiver(char* hostname, int port)
     memcpy(&raddress.sin_addr, host->h_addr_list[0], sizeof(raddress.sin_addr));
     raddress.sin_port = htons(port);
 
-    // set the destination address
-    if (connect(sock_, (const struct sockaddr*) &raddress, sizeof raddress)) {
-        throw "connect failure";
+    // set up a socket, letting kernel assign local port
+    if (proto == 0) {
+        // udp
+        sock_ = socket(AF_INET, SOCK_DGRAM, 0);
+
+        // make the socket non-blocking
+        int flags = fcntl(sock_, F_GETFL, 0);
+        fcntl(sock_, F_SETFL, flags | O_NONBLOCK);
+        flags = fcntl(sock_, F_GETFL, 0);
+        if (!(flags & O_NONBLOCK))
+            throw "nonblock failure";
     }
+    else if (proto == 1) {
+        // tcp
+        sock_ = socket(AF_INET, SOCK_STREAM, 0);
+    }
+    else
+        throw "bad protocol";
+
+    if (sock_ < 0)
+        throw "socket failure";
+
+    // set the destination address
+    if (connect(sock_, (const struct sockaddr*) &raddress, sizeof raddress))
+        throw "connect failure";
 }
 
 void
-UDPSyslogger::setPriorityWithoutUpdate(int facility, int severity)
+FastSyslogger::setPriorityWithoutUpdate(int facility, int severity)
 {
     priority_ = (facility << 3) | severity;
 }
 
 void
-UDPSyslogger::setSenderWithoutUpdate(char* sender)
+FastSyslogger::setSenderWithoutUpdate(char* sender)
 {
     strncpy(sender_, sender, sizeof(sender_) - 1);
 }
 
 void
-UDPSyslogger::setNameWithoutUpdate(char* name)
+FastSyslogger::setNameWithoutUpdate(char* name)
 {
     strncpy(name_, name, sizeof(name_)   - 1);
 }
 
 void
-UDPSyslogger::setPidWithoutUpdate(int pid)
+FastSyslogger::setPidWithoutUpdate(int pid)
 {
     pid_ = pid;
 }
 
 void
-UDPSyslogger::updatePrefix(time_t t) {
+FastSyslogger::updatePrefix(time_t t) {
     last_time_ = t;
 
     char timestr[30];
@@ -103,8 +113,8 @@ min(int a, int b)
     return a < b ? a : b;
 }
 
-void
-UDPSyslogger::send(char* msg, int len, time_t t)
+unsigned int
+FastSyslogger::send(char* msg, int len, time_t t)
 {
     // update the prefix if seconds have rolled over
     if (t != last_time_)
@@ -114,7 +124,8 @@ UDPSyslogger::send(char* msg, int len, time_t t)
     int msg_len = min(len, LOG_BUFSIZE - prefix_len_);
     strncpy(msg_start_, msg, msg_len);
 
-    ::send(sock_, linebuf_, prefix_len_ + msg_len, MSG_DONTWAIT);
+    if (::send(sock_, linebuf_, prefix_len_ + msg_len, MSG_DONTWAIT) < 0)
+        throw "send failed";
 }
 
 /*
@@ -122,9 +133,9 @@ int
 main()
 {
     int i;
-    UDPSyslogger* logger;
+    FastSyslogger* logger;
     try {
-        logger = new UDPSyslogger("127.0.0.1", 514, 4, 6, "athomason-many", "proftest");
+        logger = new FastSyslogger(0, "127.0.0.1", 514, 4, 6, "athomason-many", "proftest");
     }
     catch (const char* c) {
         perror(c);

@@ -1,16 +1,16 @@
 TYPEMAP
-UDPSyslogger *      UDPSYSLOGGER_REF
+FastSyslogger *     FASTSYSLOGGER_REF
 char *              STRINGMAYBEUNDEF
 
 OUTPUT
-UDPSYSLOGGER_REF
+FASTSYSLOGGER_REF
                     // used to use "CLASS"
-                    sv_setref_pv( $arg, "Log::Syslog::UDP", (void*)$var );
+                    sv_setref_pv( $arg, "Log::Syslog::Fast", (void*)$var );
 STRINGMAYBEUNDEF
                     warn(\"${Package}::$func_name() -- UNABLE TO RETURN CHAR *\");
 
 INPUT
-UDPSYSLOGGER_REF
+FASTSYSLOGGER_REF
                     if (sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
                         $var = ($type)SvIV((SV*)SvRV($arg));
                     else {

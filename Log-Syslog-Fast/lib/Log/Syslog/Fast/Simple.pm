@@ -1,17 +1,17 @@
-package Log::Syslog::UDP::Simple;
+package Log::Syslog::Fast::Simple;
 
 use strict;
 use warnings;
 
-use Log::Syslog::UDP ':all';
+use Log::Syslog::Fast ':all';
 use Sys::Hostname;
 
 require Exporter;
 
 our @ISA = qw(Exporter);
 
-our %EXPORT_TAGS = %Log::Syslog::UDP::EXPORT_TAGS;
-our @EXPORT_OK   = @Log::Syslog::UDP::EXPORT_OK;
+our %EXPORT_TAGS = %Log::Syslog::Fast::EXPORT_TAGS;
+our @EXPORT_OK   = @Log::Syslog::Fast::EXPORT_OK;
 our @EXPORT      = qw();
 
 use constant {
@@ -36,6 +36,7 @@ sub new {
 
     my $args = (@_ == 1 && ref $_[0] eq 'HASH') ? $_[0] : {@_};
 
+    $args->{proto}      ||= LOG_UDP;
     $args->{hostname}   ||= '127.0.0.1';
     $args->{port}       ||= 514;
     $args->{facility}   ||= LOG_LOCAL0;
@@ -45,8 +46,8 @@ sub new {
 
     return bless [
         [],    # loggers
-        [@{ $args }{qw/ 
-            hostname port facility severity sender name
+        [@{ $args }{qw/
+            proto hostname port facility severity sender name
         /}],
     ], $class;
 }
@@ -61,7 +62,7 @@ sub send {
         $args[_FACILITY] = $facility;
         $args[_SEVERITY] = $severity;
 
-        $logger = $_[0][_LOGGERS][$facility][$severity] = Log::Syslog::UDP->new(@args);
+        $logger = $_[0][_LOGGERS][$facility][$severity] = Log::Syslog::Fast->new(@args);
     }
 
     return $logger->send($_[1], $_[2] || time);
@@ -72,31 +73,31 @@ __END__
 
 =head1 NAME
 
-Log::Syslog::UDP::Simple - Wrapper around Log::Syslog::UDP that adds some
+Log::Syslog::Fast::Simple - Wrapper around Log::Syslog::Fast that adds some
 flexibility at the expense of additional runtime overhead.
 
 =head1 SYNOPSIS
 
-  use Log::Syslog::UDP::Simple;
+  use Log::Syslog::Fast::Simple;
 
   # Simple usage:
-  $logger = Log::Syslog::UDP::Simple->new;
+  $logger = Log::Syslog::Fast::Simple->new;
   $logger->send("log message");
 
   # More customized usage:
-  $logger = Log::Syslog::UDP::Simple->new(
+  $logger = Log::Syslog::Fast::Simple->new(
       loghost  => 'myloghost',
       port     => 6666,
-      facility => LOG_LOCAL2, 
+      facility => LOG_LOCAL2,
       severity => LOG_INFO,
       sender   => 'mymachine',
       name     => 'myapp',
-  ); 
+  );
   $logger->send("log message", time, LOG_LOCAL3, LOG_DEBUG);
 
 =head1 DESCRIPTION
 
-This module wraps L<Log::Syslog::UDP> to provide a constructor with reasonable
+This module wraps L<Log::Syslog::Fast> to provide a constructor with reasonable
 defaults and a send() method that optionally accepts override parameters for
 facility and severity.
 
@@ -104,13 +105,17 @@ facility and severity.
 
 =over 4
 
-=item Log::Syslog::UDP::Simple-E<gt>new(%params);
+=item Log::Syslog::Fast::Simple-E<gt>new(%params);
 
-Create a new Log::Syslog::UDP::Simple object with given parameters (may be a
+Create a new Log::Syslog::Fast::Simple object with given parameters (may be a
 hash or hashref). Takes the following named parameters which have the same
-meaning as in Log::Syslog::UDP.
+meaning as in Log::Syslog::Fast.
 
 =over 4
+
+=item proto
+
+Defaults to LOG_UDP
 
 =item loghost
 
@@ -134,7 +139,7 @@ Defaults to Sys::Hostname::hostname
 
 =item name
 
-Defaults to a cleaned $0 
+Defaults to a cleaned $0
 
 =back
 
@@ -148,11 +153,11 @@ default provided at construction time is used.
 
 =head1 EXPORT
 
-Same as Log::Syslog::UDP.
+Same as Log::Syslog::Fast.
 
 =head1 SEE ALSO
 
-L<Log::Syslog::UDP>
+L<Log::Syslog::Fast>
 
 =head1 AUTHOR
 
