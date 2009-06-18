@@ -3,9 +3,10 @@ use warnings;
 
 use Test::More tests => 8;
 
-BEGIN { use_ok('Log::Syslog::UDP::Simple', ':all') };
+BEGIN { use_ok('Log::Syslog::Fast::Simple', ':all') };
 
-my $logger = Log::Syslog::UDP::Simple->new(
+my $logger = Log::Syslog::Fast::Simple->new(
+    proto    => LOG_UDP,
     loghost  => 'localhost',
     port     => 514,
     facility => LOG_LOCAL1,
@@ -15,10 +16,10 @@ my $logger = Log::Syslog::UDP::Simple->new(
 );
 ok($logger, "->new returns something");
 
-$logger = Log::Syslog::UDP::Simple->new;
+$logger = Log::Syslog::Fast::Simple->new;
 ok($logger, "->new with defaults returns somethings");
 
-is(ref $logger, 'Log::Syslog::UDP::Simple', '->new returns a Log::Syslog::UDP::Simple object');
+is(ref $logger, 'Log::Syslog::Fast::Simple', '->new returns a Log::Syslog::Fast::Simple object');
 
 eval {
     $logger->send("testing");
