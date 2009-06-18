@@ -1,0 +1,26 @@
+Revision history for Perl extension Log::Syslog::UDP.
+0.14  Wed Nov 26 11:23:01 PST 2008
+        - Add pod for accessors.
+        - Add non-camel-case aliases for accessors.
+        - Add accessor for setting pid.
+0.13  Mon Nov 26 11:23:01 PST 2008
+        - Add setters for things clients might want to change.
+0.12  Tue Nov 18 17:18:00 2008
+	- Use more concise strftime format.
+0.11  Mon Nov 17 16:32:22 2008
+	- RFC3164/4.1.2 requires day be written with space padding, not 0
+0.10  Sat Nov 08 18:03:47 2008
+	- Another headers for BSD
+0.09  Wed Nov 05 18:49:31 2008
+	- Headers for BSDs
+        - Add some tests
+0.08  Tue Nov 04 18:34:08 2008
+	- Update MANIFEST
+0.06  Mon Nov 03 15:22:05 2008
+	- Add Log::Syslog::UDP::Simple
+0.05  Mon Nov 03 12:48:50 2008
+	- Add severity/facility constants 
+0.01  Wed Oct 15 17:21:24 2008
+	- original version; created by h2xs 1.23 with options
+		-Afn Log::Syslog::UDP
+

@@ -1,0 +1,24 @@
+TYPEMAP
+UDPSyslogger *      UDPSYSLOGGER_REF
+char *              STRINGMAYBEUNDEF
+
+OUTPUT
+UDPSYSLOGGER_REF
+                    // used to use "CLASS"
+                    sv_setref_pv( $arg, "Log::Syslog::UDP", (void*)$var );
+STRINGMAYBEUNDEF
+                    warn(\"${Package}::$func_name() -- UNABLE TO RETURN CHAR *\");
+
+INPUT
+UDPSYSLOGGER_REF
+                    if (sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
+                        $var = ($type)SvIV((SV*)SvRV($arg));
+                    else {
+                        warn(\"${Package}::$func_name() -- $var is not a blessed SV reference\");
+                        XSRETURN_UNDEF;
+                    }
+STRINGMAYBEUNDEF
+                    if ($arg == &PL_sv_undef)
+                        $var = NULL;
+                    else
+                        $var = (char *)SvPV_nolen($arg);
