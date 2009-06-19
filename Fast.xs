@@ -23,21 +23,22 @@ FastSyslogger::new(proto, hostname, port, facility, severity, sender, name);
     int severity
     char* sender
     char* name
-    CODE:
-        try {
-            RETVAL = new FastSyslogger(proto, hostname, port, facility, severity, sender, name);
-        }
-        catch (...) {
-            // squash exceptions and return undef on failure
-        }
-        if (!RETVAL) XSRETURN_UNDEF;
-    OUTPUT:
-        RETVAL
+CODE:
+    try {
+        RETVAL = new FastSyslogger(proto, hostname, port, facility, severity, sender, name);
+    }
+    catch (...) {
+        // squash exceptions and return undef on failure
+        XSRETURN_UNDEF;
+    }
+    if (!RETVAL) XSRETURN_UNDEF;
+OUTPUT:
+    RETVAL
 
 void
 FastSyslogger::DESTROY()
 
-unsigned int
+int
 FastSyslogger::send(logmsg, now = time(0))
     char* logmsg
     time_t now
@@ -50,6 +51,9 @@ CODE:
     catch (...) {
         croak("Error while sending: %s", strerror(errno));
     }
+    if (!RETVAL) XSRETURN_UNDEF;
+OUTPUT:
+    RETVAL
 
 void
 FastSyslogger::setReceiver(proto, hostname, port)
