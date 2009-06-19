@@ -96,6 +96,8 @@ significant CPU overhead of that module when used for high-volume logging. Use
 of this specialized module is only necessary if 1) you must use network syslog
 as a messaging transport but 2) need to minimize the time spent in the logger.
 
+This module supercedes the less general L<Log::Syslog::UDP>.
+
 =head1 METHODS
 
 =over 4
