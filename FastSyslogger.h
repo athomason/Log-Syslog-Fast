@@ -11,7 +11,7 @@ public:
     FastSyslogger(int proto, char* hostname, int port, int facility, int severity, char* sender, char* name);
     ~FastSyslogger();
 
-    unsigned int send(char* msg, int len, time_t t);
+    int send(char* msg, int len, time_t t);
 
     void setReceiver(int proto, char* hostname, int port);
 

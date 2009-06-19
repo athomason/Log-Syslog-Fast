@@ -63,7 +63,7 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
         throw "socket failure";
 
     // set the destination address
-    if (connect(sock_, (const struct sockaddr*) &raddress, sizeof raddress))
+    if (connect(sock_, (const struct sockaddr*) &raddress, sizeof raddress) != 0)
         throw "connect failure";
 }
 
@@ -113,7 +113,7 @@ min(int a, int b)
     return a < b ? a : b;
 }
 
-unsigned int
+int
 FastSyslogger::send(char* msg, int len, time_t t)
 {
     // update the prefix if seconds have rolled over
@@ -124,8 +124,12 @@ FastSyslogger::send(char* msg, int len, time_t t)
     int msg_len = min(len, LOG_BUFSIZE - prefix_len_);
     strncpy(msg_start_, msg, msg_len);
 
-    if (::send(sock_, linebuf_, prefix_len_ + msg_len, MSG_DONTWAIT) < 0)
+    int ret = ::send(sock_, linebuf_, prefix_len_ + msg_len, MSG_DONTWAIT);
+
+    if (ret < 0)
         throw "send failed";
+
+    return ret;
 }
 
 /*
