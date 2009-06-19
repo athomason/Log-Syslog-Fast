@@ -80,7 +80,7 @@ __END__
 
 =head1 NAME
 
-Log::Syslog::Fast - Perl extension for very quickly sending syslog messages over TCP/UDP.
+Log::Syslog::Fast - Perl extension for very quickly sending syslog messages over TCP or UDP.
 
 =head1 SYNOPSIS
 
@@ -90,13 +90,11 @@ Log::Syslog::Fast - Perl extension for very quickly sending syslog messages over
 
 =head1 DESCRIPTION
 
-XXX Update for tcp
-
-This module sends syslog messages over a non-blocking UDP socket. It works like
-L<Sys::Syslog> in setlogsock('udp') mode, but without the significant CPU
-overhead of that module when used for high-volume logging. Use of this
-specialized module is only necessary if 1) you must use UDP syslog as a messaging
-transport but 2) need to minimize the time spent in the logger.
+This module sends syslog messages over a network socket. It works like
+L<Sys::Syslog> in setlogsock's 'udp' or 'tcp' modes, but without the
+significant CPU overhead of that module when used for high-volume logging. Use
+of this specialized module is only necessary if 1) you must use network syslog
+as a messaging transport but 2) need to minimize the time spent in the logger.
 
 =head1 METHODS
 
@@ -111,6 +109,10 @@ Create a new Log::Syslog::Fast object with the following parameters:
 =item $proto
 
 The transport protocol, either LOG_TCP or LOG_UDP.
+
+If LOG_TCP is used, calls to $logger-E<gt>send() will block until remote
+receipt of the message is confirmed. If LOG_UDP is used, the call will never
+block and may fail if insufficient buffer space exists in the network stack.
 
 =item $hostname
 
@@ -145,11 +147,12 @@ The program name or tag to use for the message.
 
 Send a syslog message through the configured logger. If $time is not provided,
 CORE::time() will be called for you. That doubles the syscalls per message, so
-try to pass it if you're calling time() yourself already.
+try to pass it if you're already calling time() yourself.
 
 =item $logger-E<gt>set_receiver($hostname, $port)
 
-Change the destination host and port.
+Change the destination host and port. This will force a reconnection in LOG_TCP
+mode.
 
 =item $logger-E<gt>set_priority($facility, $severity)
 
