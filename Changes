@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.20  Tue Jun 30 19:26:33 PST 2009
+        - Fix tests to account for variable payload length
 0.15  Thu Jun 18 15:18:01 PST 2009
         - Copied from Log::Syslog::UDP
         - Add support for blocking TCP transport
