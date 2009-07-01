@@ -40,6 +40,8 @@ my $p;
 
 my $test_port = 10514;
 
+my $payload_len = 47 + length "$$";
+
 for my $proto (LOG_UDP, LOG_TCP) {
 
     $p = ($proto == LOG_UDP ? 'udp' : 'tcp');
@@ -57,14 +59,14 @@ for my $proto (LOG_UDP, LOG_TCP) {
     {
         my $sent = eval { $logger->send("testing 1", time) };
         ok(!$@, "$p: ->send with time doesn't throw");
-        is($sent, 52, "$p: ->send sent whole payload");
+        is($sent, $payload_len, "$p: ->send sent whole payload");
 
         my $found = wait_for_readable($receiver);
         ok($found, "$p: didn't time out while waiting for data");
 
         if ($found) {
             $receiver->recv(my $buf, 256);
-            is(length $buf, 52, "$p: payload is right size");
+            is(length $buf, $payload_len, "$p: payload is right size");
             ok($buf =~ /^<38>/, "$p: ->send with time has the right priority");
             ok($buf =~ /testing 1$/, "$p: ->send with time sends right payload");
         }
@@ -73,14 +75,14 @@ for my $proto (LOG_UDP, LOG_TCP) {
     {
         my $sent = eval { $logger->send("testing 2") };
         ok(!$@, "$p: ->send without time doesn't throw");
-        is($sent, 52, "$p: ->send sent whole payload");
+        is($sent, $payload_len, "$p: ->send sent whole payload");
 
         my $found = wait_for_readable($receiver);
         ok($found, "$p: didn't time out while waiting for data");
 
         if ($found) {
             $receiver->recv(my $buf, 256);
-            is(length $buf, 52, "$p: payload is right size");
+            is(length $buf, $payload_len, "$p: payload is right size");
             ok($buf =~ /^<38>/, "$p: ->send without time has the right priority");
             ok($buf =~ /testing 2$/, "$p: ->send without time sends right payload");
         }
