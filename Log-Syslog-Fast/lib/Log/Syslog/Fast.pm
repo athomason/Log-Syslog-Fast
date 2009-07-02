@@ -70,7 +70,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
@@ -80,12 +80,13 @@ __END__
 
 =head1 NAME
 
-Log::Syslog::Fast - Perl extension for very quickly sending syslog messages over TCP or UDP.
+Log::Syslog::Fast - Perl extension for very quickly sending syslog messages
+over TCP or UDP.
 
 =head1 SYNOPSIS
 
-  use Log::Syslog::Fast;
-  my $logger = Log::Syslog::Fast->new(LOG_UDP, "127.0.0.1", 514, 16, 6, "mymachine", "logger");
+  use Log::Syslog::Fast ':all';
+  my $logger = Log::Syslog::Fast->new(LOG_UDP, "127.0.0.1", 514, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
   $logger->send("log message", time);
 
 =head1 DESCRIPTION
@@ -93,8 +94,9 @@ Log::Syslog::Fast - Perl extension for very quickly sending syslog messages over
 This module sends syslog messages over a network socket. It works like
 L<Sys::Syslog> in setlogsock's 'udp' or 'tcp' modes, but without the
 significant CPU overhead of that module when used for high-volume logging. Use
-of this specialized module is only necessary if 1) you must use network syslog
-as a messaging transport but 2) need to minimize the time spent in the logger.
+of this specialized module is only recommended if 1) you must use network
+syslog as a messaging transport but 2) need to minimize the time spent in the
+logger.
 
 This module supercedes the less general L<Log::Syslog::UDP>.
 
@@ -151,8 +153,17 @@ The program name or tag to use for the message.
 
 Send a syslog message through the configured logger. If $time is not provided,
 CORE::time() will be called for you. That doubles the syscalls per message, so
-try to pass it if you're already calling time() yourself. B<emit> is an alias
-for B<send>.
+try to pass it if you're already calling time() yourself.
+
+B<emit> is an alias for B<send>.
+
+=head3 NEWLINE CAVEAT
+
+Note that B<send> does not add any newline character(s) to its input. You will
+certainly want to do this yourself for TCP connections, or the server will not
+treat each message as a separate line. However with UDP the server should
+accept a message without a trailing newline (though some implementations may
+have difficulty with that).
 
 =item $logger-E<gt>set_receiver($hostname, $port)
 
