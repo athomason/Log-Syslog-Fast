@@ -70,7 +70,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.20';
+our $VERSION = '0.21';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
@@ -147,9 +147,12 @@ The program name or tag to use for the message.
 
 =item $logger-E<gt>send($logmsg, [$time])
 
+=item $logger-E<gt>emit($logmsg, [$time])
+
 Send a syslog message through the configured logger. If $time is not provided,
 CORE::time() will be called for you. That doubles the syscalls per message, so
-try to pass it if you're already calling time() yourself.
+try to pass it if you're already calling time() yourself. B<emit> is an alias
+for B<send>.
 
 =item $logger-E<gt>set_receiver($hostname, $port)
 
