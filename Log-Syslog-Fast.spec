@@ -12,8 +12,8 @@
 %define maketest 1
 
 name:      perl-Log-Syslog-Fast
-summary:   Log-Syslog-Fast - Perl extension for very quickly sending syslog messages over Fast.
-version:   0.22
+summary:   Log-Syslog-Fast - Log::Syslog::Fast - Perl extension for sending syslog messages over TCP or UDP with minimal CPU overhead.
+version:   0.23
 release:   1
 vendor:    Adam Thomason <athomason@sixapart.com>
 packager:  Arix International <cpan2rpm@arix.com>
