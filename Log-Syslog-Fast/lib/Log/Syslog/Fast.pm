@@ -70,7 +70,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
@@ -80,8 +80,8 @@ __END__
 
 =head1 NAME
 
-Log::Syslog::Fast - Perl extension for very quickly sending syslog messages
-over TCP or UDP.
+Log::Syslog::Fast - Perl extension for sending syslog messages over TCP or UDP
+with minimal CPU overhead.
 
 =head1 SYNOPSIS
 
