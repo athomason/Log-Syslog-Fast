@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.23  Thu Jul  2 16:23:09 PST 2009
+        - Add shipit config
 0.22  Thu Jul  2 16:03:33 PST 2009
         - Clarify newline (non)-handling
 0.21  Thu Jul  2 12:00:35 PST 2009

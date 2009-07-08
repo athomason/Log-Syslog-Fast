@@ -1,6 +1,7 @@
 Changes
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 ppport.h
 README
 Fast.xs
@@ -12,3 +13,4 @@ FastSyslogger.cpp
 FastSyslogger.h
 META.yml                                 Module meta-data (added by MakeMaker)
 typemap
+Log-Syslog-Fast.spec
