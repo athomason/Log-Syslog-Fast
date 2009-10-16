@@ -18,12 +18,13 @@ use constant {
     _LOGGERS    => 0,
     _ARGS       => 1,
 
-    _HOSTNAME   => 0,
-    _PORT       => 1,
-    _FACILITY   => 2,
-    _SEVERITY   => 3,
-    _SENDER     => 4,
-    _NAME       => 5,
+    _PROTO      => 0,
+    _HOSTNAME   => 1,
+    _PORT       => 2,
+    _FACILITY   => 3,
+    _SEVERITY   => 4,
+    _SENDER     => 5,
+    _NAME       => 6,
 };
 
 sub new {
