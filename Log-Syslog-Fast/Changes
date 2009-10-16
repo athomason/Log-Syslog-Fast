@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.24  Thu Oct 15 22:20:07 PDT 2009
+        - Fix porting bug in Log::Syslog::Fast::Simple; https://rt.cpan.org/Ticket/Display.html?id=50548
 0.23  Thu Jul  2 16:23:09 PST 2009
         - Add shipit config
 0.22  Thu Jul  2 16:03:33 PST 2009
