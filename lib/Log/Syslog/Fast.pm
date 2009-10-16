@@ -70,7 +70,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
