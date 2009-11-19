@@ -1,4 +1,4 @@
-Log-Syslog-Fast version 0.01
+Log-Syslog-Fast version 0.25
 ===========================
 
 The README is used to introduce the module and provide instructions on
@@ -21,11 +21,15 @@ To install this module type the following:
    make test
    make install
 
+DEVELOPMENT
+
+The latest version of this module is available from:
+
+  http://svn.sixapart.com/repos/eng/modules/Log-Syslog-Fast/trunk/
+
 COPYRIGHT AND LICENCE
 
-Put the correct copyright and licence information here.
-
-Copyright (C) 2008 by Six Apart, Ltd.
+Copyright (C) 2009 by Six Apart, Ltd.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.5 or,
