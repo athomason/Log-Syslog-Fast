@@ -21,12 +21,6 @@ To install this module type the following:
    make test
    make install
 
-DEVELOPMENT
-
-The latest version of this module is available from:
-
-  http://svn.sixapart.com/repos/eng/modules/Log-Syslog-Fast/trunk/
-
 COPYRIGHT AND LICENCE
 
 Copyright (C) 2009 by Six Apart, Ltd.
