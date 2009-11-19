@@ -62,6 +62,9 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
     if (sock_ < 0)
         throw "socket failure";
 
+    // close the socket after exec
+    fcntl(sock_, F_SETFD, FD_CLOEXEC);
+
     // set the destination address
     if (connect(sock_, (const struct sockaddr*) &raddress, sizeof raddress) != 0)
         throw "connect failure";
