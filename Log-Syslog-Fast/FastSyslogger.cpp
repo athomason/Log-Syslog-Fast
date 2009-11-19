@@ -42,7 +42,7 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
 
     // set up a socket, letting kernel assign local port
     if (proto == 0) {
-        // udp
+        // LOG_UDP from FastSyslogger.pm
         sock_ = socket(AF_INET, SOCK_DGRAM, 0);
 
         // make the socket non-blocking
@@ -53,7 +53,7 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
             throw "nonblock failure";
     }
     else if (proto == 1) {
-        // tcp
+        // LOG_TCP from FastSyslogger.pm
         sock_ = socket(AF_INET, SOCK_STREAM, 0);
     }
     else
@@ -62,7 +62,7 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
     if (sock_ < 0)
         throw "socket failure";
 
-    // close the socket after exec
+    // close the socket after exec to match normal Perl behavior for sockets
     fcntl(sock_, F_SETFD, FD_CLOEXEC);
 
     // set the destination address
@@ -134,24 +134,3 @@ FastSyslogger::send(char* msg, int len, time_t t)
 
     return ret;
 }
-
-/*
-int
-main()
-{
-    int i;
-    FastSyslogger* logger;
-    try {
-        logger = new FastSyslogger(0, "127.0.0.1", 514, 4, 6, "athomason-many", "proftest");
-    }
-    catch (const char* c) {
-        perror(c);
-        return 1;
-    }
-    char buf[20];
-    for (i = 0; i < 10; i++) {
-        int len = sprintf(buf, "testing %d\n", i);
-        logger->send(buf, len, time(0));
-    }
-}
-*/
