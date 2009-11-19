@@ -13,7 +13,7 @@
 
 name:      perl-Log-Syslog-Fast
 summary:   Log-Syslog-Fast - Log::Syslog::Fast - Perl extension for sending syslog messages over TCP or UDP with minimal CPU overhead.
-version:   0.24
+version:   0.25
 release:   1
 vendor:    Adam Thomason <athomason@sixapart.com>
 packager:  Arix International <cpan2rpm@arix.com>
