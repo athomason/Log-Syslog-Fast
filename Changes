@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.26  Fri Jan  8 13:08:43 PST 2010
+        - Add get_facility/get_severity for getting constants by name
+        - Fix swapped :facilities/:severities
 0.25  Thu Nov 19 12:40:03 PST 2009
         - Make log socket be close-on-exec
 0.24  Thu Oct 15 22:20:07 PDT 2009
