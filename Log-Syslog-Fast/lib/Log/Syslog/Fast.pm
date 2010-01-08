@@ -50,11 +50,11 @@ our %EXPORT_TAGS = (
     protos   => [qw/
         LOG_TCP LOG_UDP
     /],
-    facilities   => [qw/
+    severities   => [qw/
         LOG_EMERG LOG_ALERT LOG_CRIT LOG_ERR LOG_WARNING
         LOG_NOTICE LOG_INFO LOG_DEBUG
     /],
-    severities => [qw/
+    facilities => [qw/
         LOG_KERN LOG_USER LOG_MAIL LOG_DAEMON LOG_AUTH
         LOG_SYSLOG LOG_LPR LOG_NEWS LOG_UUCP LOG_CRON
         LOG_AUTHPRIV LOG_FTP LOG_LOCAL0 LOG_LOCAL1 LOG_LOCAL2
@@ -64,16 +64,59 @@ our %EXPORT_TAGS = (
 @{ $EXPORT_TAGS{'all'} } = (
     @{ $EXPORT_TAGS{'protos'} },
     @{ $EXPORT_TAGS{'facilities'} },
-    @{ $EXPORT_TAGS{'severities'} }
+    @{ $EXPORT_TAGS{'severities'} },
+    qw/ get_severity get_facility /,
 );
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.25';
+our $VERSION = '0.26';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
+
+my %_severities_by_name = (
+    emerg    => LOG_EMERG,
+    alert    => LOG_ALERT,
+    crit     => LOG_CRIT,
+    err      => LOG_ERR,
+    warning  => LOG_WARNING,
+    notice   => LOG_NOTICE,
+    info     => LOG_INFO,
+    debug    => LOG_DEBUG,
+);
+
+my %_facilities_by_name = (
+    kern     => LOG_KERN,
+    user     => LOG_USER,
+    mail     => LOG_MAIL,
+    daemon   => LOG_DAEMON,
+    auth     => LOG_AUTH,
+    syslog   => LOG_SYSLOG,
+    lpr      => LOG_LPR,
+    news     => LOG_NEWS,
+    uucp     => LOG_UUCP,
+    cron     => LOG_CRON,
+    authpriv => LOG_AUTHPRIV,
+    ftp      => LOG_FTP,
+    local0   => LOG_LOCAL0,
+    local1   => LOG_LOCAL1,
+    local2   => LOG_LOCAL2,
+    local3   => LOG_LOCAL3,
+    local4   => LOG_LOCAL4,
+    local5   => LOG_LOCAL5,
+    local6   => LOG_LOCAL6,
+    local7   => LOG_LOCAL7,
+);
+
+sub get_severity {
+    $_severities_by_name{lc $_[0]};
+}
+
+sub get_facility {
+    $_facilities_by_name{lc $_[0]};
+}
 
 1;
 __END__
@@ -129,12 +172,14 @@ The destination port where a syslogd is listening. Usually 514.
 =item $facility
 
 The syslog facility constant, eg 16 for 'local0'. See RFC3164 section 4.1.1 (or
-E<lt>sys/syslog.hE<gt>) for appropriate constant values.
+E<lt>sys/syslog.hE<gt>) for appropriate constant values. See L<EXPORT> below
+for making these available by name.
 
 =item $severity
 
 The syslog severity constant, eg 6 for 'info'. See RFC3164 section 4.1.1 (or
-E<lt>sys/syslog.hE<gt>) for appropriate constant values.
+E<lt>sys/syslog.hE<gt>) for appropriate constant values. See L<EXPORT> below
+for making these available by name.
 
 =item $sender
 
@@ -196,6 +241,9 @@ You may optionally import constants for severity and facility levels.
   use Log::Syslog::Fast qw(:severities); # LOG_CRIT, LOG_NOTICE, LOG_DEBUG, etc
   use Log::Syslog::Fast qw(:facilities); # LOG_CRON, LOG_LOCAL3, etc
   use Log::Syslog::Fast qw(:all); # all of the above
+
+The get_facility and get_severity functions may be used to get these constants
+by name, e.g. Log::Syslog::Fast::get_severity('info') == LOG_INFO.
 
 =head1 SEE ALSO
 
