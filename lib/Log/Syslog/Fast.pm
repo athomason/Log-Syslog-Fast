@@ -12,6 +12,7 @@ use constant {
     # protocols
     LOG_UDP         => 0, # UDP
     LOG_TCP         => 1, # TCP
+    LOG_UNIX        => 2, # UNIX socket
 
     # severities
     LOG_EMERG       => 0, # system is unusable
@@ -48,7 +49,7 @@ use constant {
 
 our %EXPORT_TAGS = (
     protos   => [qw/
-        LOG_TCP LOG_UDP
+        LOG_TCP LOG_UDP LOG_UNIX
     /],
     severities   => [qw/
         LOG_EMERG LOG_ALERT LOG_CRIT LOG_ERR LOG_WARNING
@@ -71,7 +72,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.26';
+our $VERSION = '0.27';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
@@ -155,19 +156,23 @@ Create a new Log::Syslog::Fast object with the following parameters:
 
 =item $proto
 
-The transport protocol, either LOG_TCP or LOG_UDP.
+The transport protocol, one of LOG_TCP, LOG_UDP, or LOG_UNIX.
 
-If LOG_TCP is used, calls to $logger-E<gt>send() will block until remote
-receipt of the message is confirmed. If LOG_UDP is used, the call will never
-block and may fail if insufficient buffer space exists in the network stack.
+If LOG_TCP or LOG_UNIX is used, calls to $logger-E<gt>send() will block until
+remote receipt of the message is confirmed. If LOG_UDP is used, the call will
+never block and may fail if insufficient buffer space exists in the network
+stack.
 
 =item $hostname
 
-The destination hostname where a syslogd is running.
+For LOG_TCP and LOG_UDP, the destination hostname where a syslogd is running.
+For LOG_UNIX, the path to the UNIX socket where syslogd is listening (typically
+/dev/log).
 
 =item $port
 
-The destination port where a syslogd is listening. Usually 514.
+For LOG_TCP and LOG_UDP, the destination port where a syslogd is listening,
+usually 514. Ignored for LOG_UNIX.
 
 =item $facility
 
@@ -213,7 +218,7 @@ have difficulty with that).
 =item $logger-E<gt>set_receiver($hostname, $port)
 
 Change the destination host and port. This will force a reconnection in LOG_TCP
-mode.
+or LOG_UNIX mode.
 
 =item $logger-E<gt>set_priority($facility, $severity)
 
@@ -237,7 +242,7 @@ Change what is sent as the process id of the sending program.
 
 You may optionally import constants for severity and facility levels.
 
-  use Log::Syslog::Fast qw(:protos); # LOG_TCP and LOG_UDP
+  use Log::Syslog::Fast qw(:protos); # LOG_TCP, LOG_UDP, and LOG_UNIX
   use Log::Syslog::Fast qw(:severities); # LOG_CRIT, LOG_NOTICE, LOG_DEBUG, etc
   use Log::Syslog::Fast qw(:facilities); # LOG_CRON, LOG_LOCAL3, etc
   use Log::Syslog::Fast qw(:all); # all of the above
