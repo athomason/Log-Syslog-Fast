@@ -48,8 +48,8 @@ CODE:
     try {
         RETVAL = THIS->send(logmsg, strlen(logmsg), now);
     }
-    catch (...) {
-        croak("Error while sending: %s", strerror(errno));
+    catch (const char*& s) {
+        croak("Error while sending: %s (%s)", s, strerror(errno));
     }
     if (!RETVAL) XSRETURN_UNDEF;
 OUTPUT:
@@ -62,6 +62,13 @@ FastSyslogger::setReceiver(proto, hostname, port)
     int port
 ALIAS:
     Log::Syslog::Fast::set_receiver = 1
+CODE:
+    try {
+        THIS->setReceiver(proto, hostname, port);
+    }
+    catch (const char*& s) {
+        croak("Error in set_receiver: %s (%s)", s, strerror(errno));
+    }
 
 void
 FastSyslogger::setPriority(facility, severity)

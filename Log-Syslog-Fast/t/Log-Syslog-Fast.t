@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More 'no_plan';
 use IO::Socket::INET;
+use IO::Socket::UNIX;
 
 BEGIN { use_ok('Log::Syslog::Fast', ':all') };
 
@@ -71,17 +72,20 @@ is(get_facility('local7'),   LOG_LOCAL7,   'named LOG_LOCAL7');
 my $p;
 
 my $test_port = 10514;
+my $test_file = '/tmp/devlog-lsf';
+
+END { unlink $test_file }
 
 my $payload_len = 47 + length "$$";
 
-for my $proto (LOG_UDP, LOG_TCP) {
+for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
 
-    $p = ($proto == LOG_UDP ? 'udp' : 'tcp');
+    $p = ($proto == LOG_UDP ? 'udp' : $proto == LOG_TCP ? 'tcp' : 'unix');
 
-    my $listener = listener();
-    ok($listener, "$p: listen on port $test_port");
+    my ($listener, $test_host) = listener();
+    ok($listener, "$p: listen on " . ($proto == LOG_UNIX ? $test_host : " port $test_port"));
 
-    my $logger = Log::Syslog::Fast->new($proto, "127.0.0.1", $test_port, 4, 6, "localhost", "test");
+    my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, 4, 6, "localhost", "test");
     ok($logger, "$p: ->new returns something");
 
     is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
@@ -122,13 +126,18 @@ for my $proto (LOG_UDP, LOG_TCP) {
 
     eval {
         $test_port++;
-        $listener = listener();
-        $logger = Log::Syslog::Fast->new($proto, "127.0.0.1", $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
+        if ($p eq 'unix') {
+            undef $logger;
+            undef $listener;
+            unlink $test_file;
+        }
+        ($listener, $test_host) = listener();
+        $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
 
-        $listener->accept if $p eq 'tcp'; # ignore first connection
+        $listener->accept if $p eq 'tcp' or $p eq 'unix'; # ignore first connection
 
         eval {
-            $logger->set_receiver($proto, "127.0.0.1", $test_port);
+            $logger->set_receiver($proto, $test_host, $test_port);
         };
         ok(!$@, "$p: ->set_receiver doesn't throw");
 
@@ -172,22 +181,31 @@ for my $proto (LOG_UDP, LOG_TCP) {
             ok($buf =~ /testing 3$/, "$p: ->send after accessors sends right payload");
         }
     };
+    diag($@) if $@;
 }
 
 sub listener {
-    return IO::Socket::INET->new(
-        Proto       => $p,
-        LocalHost   => 'localhost',
-        LocalPort   => $test_port,
-        ($p eq 'tcp' ? (Listen => 5) : ()),
-        Reuse       => 1,
-    );
+    if ($p eq 'unix') {
+        return (IO::Socket::UNIX->new(
+            Local   => $test_file,
+            Listen  => 1,
+        ), $test_file);
+    }
+    else {
+        return (IO::Socket::INET->new(
+            Proto       => $p,
+            LocalHost   => 'localhost',
+            LocalPort   => $test_port,
+            ($p eq 'tcp' ? (Listen => 5) : ()),
+            Reuse       => 1,
+        ), 'localhost');
+    }
 }
 
 sub l2r {
     my $listener = shift;
     return $listener if $p eq 'udp';
-    if ($p eq 'tcp') {
+    if ($p eq 'tcp' or $p eq 'unix') {
         my $receiver = $listener->accept;
         $receiver->blocking(0);
         return $receiver;
