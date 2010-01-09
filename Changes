@@ -1,4 +1,8 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.27  Fri Jan  8 18:03:41 PST 2010
+        - Support unix sockets (e.g. /dev/log)
+        - Throw, don't crash on failure in setReceiver
+        - Better error reporting
 0.26  Fri Jan  8 13:08:43 PST 2010
         - Add get_facility/get_severity for getting constants by name
         - Fix swapped :facilities/:severities
