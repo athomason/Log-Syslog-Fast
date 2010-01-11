@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.28  Mon Jan 11 13:15:10 PST 2010
+        - Move syslogconstants into Log::Syslog::Constants
 0.27  Fri Jan  8 18:03:41 PST 2010
         - Support unix sockets (e.g. /dev/log)
         - Throw, don't crash on failure in setReceiver

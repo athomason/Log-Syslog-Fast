@@ -5,127 +5,46 @@ use strict;
 use warnings;
 
 require Exporter;
+use Log::Syslog::Constants ();
 
-our @ISA = qw(Exporter);
+our $VERSION = '0.28';
+
+our @ISA = qw(Log::Syslog::Constants Exporter);
 
 use constant {
     # protocols
     LOG_UDP         => 0, # UDP
     LOG_TCP         => 1, # TCP
     LOG_UNIX        => 2, # UNIX socket
-
-    # severities
-    LOG_EMERG       => 0, # system is unusable
-    LOG_ALERT       => 1, # action must be taken immediately
-    LOG_CRIT        => 2, # critical conditions
-    LOG_ERR         => 3, # error conditions
-    LOG_WARNING     => 4, # warning conditions
-    LOG_NOTICE      => 5, # normal but significant condition
-    LOG_INFO        => 6, # informational
-    LOG_DEBUG       => 7, # debug-level messages
-
-    # facilities
-    LOG_KERN        => 0, # kernel messages
-    LOG_USER        => 1, # random user-level messages
-    LOG_MAIL        => 2, # mail system
-    LOG_DAEMON      => 3, # system daemons
-    LOG_AUTH        => 4, # security/authorization messages
-    LOG_SYSLOG      => 5, # messages generated internally by syslogd
-    LOG_LPR         => 6, # line printer subsystem
-    LOG_NEWS        => 7, # network news subsystem
-    LOG_UUCP        => 8, # UUCP subsystem
-    LOG_CRON        => 9, # clock daemon
-    LOG_AUTHPRIV    => 10, # security/authorization messages (private)
-    LOG_FTP         => 11, # ftp daemon
-    LOG_LOCAL0      => 16, # reserved for local use
-    LOG_LOCAL1      => 17, # reserved for local use
-    LOG_LOCAL2      => 18, # reserved for local use
-    LOG_LOCAL3      => 19, # reserved for local use
-    LOG_LOCAL4      => 20, # reserved for local use
-    LOG_LOCAL5      => 21, # reserved for local use
-    LOG_LOCAL6      => 22, # reserved for local use
-    LOG_LOCAL7      => 23, # reserved for local use
 };
 
 our %EXPORT_TAGS = (
-    protos   => [qw/
-        LOG_TCP LOG_UDP LOG_UNIX
-    /],
-    severities   => [qw/
-        LOG_EMERG LOG_ALERT LOG_CRIT LOG_ERR LOG_WARNING
-        LOG_NOTICE LOG_INFO LOG_DEBUG
-    /],
-    facilities => [qw/
-        LOG_KERN LOG_USER LOG_MAIL LOG_DAEMON LOG_AUTH
-        LOG_SYSLOG LOG_LPR LOG_NEWS LOG_UUCP LOG_CRON
-        LOG_AUTHPRIV LOG_FTP LOG_LOCAL0 LOG_LOCAL1 LOG_LOCAL2
-        LOG_LOCAL3 LOG_LOCAL4 LOG_LOCAL5 LOG_LOCAL6 LOG_LOCAL7
-    /],
+    protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
+    %Log::Syslog::Constants::EXPORT_TAGS,
 );
-@{ $EXPORT_TAGS{'all'} } = (
-    @{ $EXPORT_TAGS{'protos'} },
-    @{ $EXPORT_TAGS{'facilities'} },
-    @{ $EXPORT_TAGS{'severities'} },
-    qw/ get_severity get_facility /,
-);
+push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-our $VERSION = '0.27';
+sub AUTOLOAD {
+    (my $meth = our $AUTOLOAD) =~ s/.*:://;
+    if (Log::Syslog::Constants->can($meth)) {
+        return Log::Syslog::Constants->$meth(@_);
+    }
+    die "Undefined subroutine $AUTOLOAD";
+}
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);
-
-my %_severities_by_name = (
-    emerg    => LOG_EMERG,
-    alert    => LOG_ALERT,
-    crit     => LOG_CRIT,
-    err      => LOG_ERR,
-    warning  => LOG_WARNING,
-    notice   => LOG_NOTICE,
-    info     => LOG_INFO,
-    debug    => LOG_DEBUG,
-);
-
-my %_facilities_by_name = (
-    kern     => LOG_KERN,
-    user     => LOG_USER,
-    mail     => LOG_MAIL,
-    daemon   => LOG_DAEMON,
-    auth     => LOG_AUTH,
-    syslog   => LOG_SYSLOG,
-    lpr      => LOG_LPR,
-    news     => LOG_NEWS,
-    uucp     => LOG_UUCP,
-    cron     => LOG_CRON,
-    authpriv => LOG_AUTHPRIV,
-    ftp      => LOG_FTP,
-    local0   => LOG_LOCAL0,
-    local1   => LOG_LOCAL1,
-    local2   => LOG_LOCAL2,
-    local3   => LOG_LOCAL3,
-    local4   => LOG_LOCAL4,
-    local5   => LOG_LOCAL5,
-    local6   => LOG_LOCAL6,
-    local7   => LOG_LOCAL7,
-);
-
-sub get_severity {
-    $_severities_by_name{lc $_[0]};
-}
-
-sub get_facility {
-    $_facilities_by_name{lc $_[0]};
-}
 
 1;
 __END__
 
 =head1 NAME
 
-Log::Syslog::Fast - Perl extension for sending syslog messages over TCP or UDP
-with minimal CPU overhead.
+Log::Syslog::Fast - Perl extension for sending syslog messages over TCP, UDP,
+or UNIX sockets with minimal CPU overhead.
 
 =head1 SYNOPSIS
 
@@ -136,7 +55,7 @@ with minimal CPU overhead.
 =head1 DESCRIPTION
 
 This module sends syslog messages over a network socket. It works like
-L<Sys::Syslog> in setlogsock's 'udp' or 'tcp' modes, but without the
+L<Sys::Syslog> in setlogsock's 'udp', 'tcp', or 'unix' modes, but without the
 significant CPU overhead of that module when used for high-volume logging. Use
 of this specialized module is only recommended if 1) you must use network
 syslog as a messaging transport but 2) need to minimize the time spent in the
@@ -156,7 +75,7 @@ Create a new Log::Syslog::Fast object with the following parameters:
 
 =item $proto
 
-The transport protocol, one of LOG_TCP, LOG_UDP, or LOG_UNIX.
+The transport protocol: one of LOG_TCP, LOG_UDP, or LOG_UNIX.
 
 If LOG_TCP or LOG_UNIX is used, calls to $logger-E<gt>send() will block until
 remote receipt of the message is confirmed. If LOG_UDP is used, the call will
@@ -177,13 +96,13 @@ usually 514. Ignored for LOG_UNIX.
 =item $facility
 
 The syslog facility constant, eg 16 for 'local0'. See RFC3164 section 4.1.1 (or
-E<lt>sys/syslog.hE<gt>) for appropriate constant values. See L<EXPORT> below
+E<lt>sys/syslog.hE<gt>) for appropriate constant values. See L<EXPORTS> below
 for making these available by name.
 
 =item $severity
 
 The syslog severity constant, eg 6 for 'info'. See RFC3164 section 4.1.1 (or
-E<lt>sys/syslog.hE<gt>) for appropriate constant values. See L<EXPORT> below
+E<lt>sys/syslog.hE<gt>) for appropriate constant values. See L<EXPORTS> below
 for making these available by name.
 
 =item $sender
@@ -238,19 +157,13 @@ Change what is sent as the process id of the sending program.
 
 =back
 
-=head1 EXPORT
+=head1 EXPORTS
 
-You may optionally import constants for severity and facility levels.
-
-  use Log::Syslog::Fast qw(:protos); # LOG_TCP, LOG_UDP, and LOG_UNIX
-  use Log::Syslog::Fast qw(:severities); # LOG_CRIT, LOG_NOTICE, LOG_DEBUG, etc
-  use Log::Syslog::Fast qw(:facilities); # LOG_CRON, LOG_LOCAL3, etc
-  use Log::Syslog::Fast qw(:all); # all of the above
-
-The get_facility and get_severity functions may be used to get these constants
-by name, e.g. Log::Syslog::Fast::get_severity('info') == LOG_INFO.
+Use Log::Syslog::Constants to export priority constants, e.g. LOG_INFO.
 
 =head1 SEE ALSO
+
+L<Log::Syslog::Constants>
 
 L<Sys::Syslog>
 
@@ -260,7 +173,7 @@ Adam Thomason, E<lt>athomason@sixapart.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008 by Six Apart, Ltd.
+Copyright (C) 2010 by Six Apart, Ltd.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.5 or,
