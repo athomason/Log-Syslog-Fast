@@ -1,0 +1,6 @@
+# auto-generated shipit config file.
+steps = FindVersion, ChangeVersion, CheckChangeLog, DistTest, Commit, Tag, MakeDist, UploadCPAN
+
+svn.tagpattern = http://svn.sixapart.com/repos/eng/modules/Log-Syslog-Fast/tags/Log-Syslog-Fast-%v
+
+CheckChangeLog.files = Changes
