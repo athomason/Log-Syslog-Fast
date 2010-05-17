@@ -5,6 +5,7 @@ use Test::More 'no_plan';
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Log::Syslog::Constants ':all';
+use POSIX 'strftime';
 
 BEGIN { use_ok('Log::Syslog::Fast', ':protos') };
 
@@ -15,8 +16,6 @@ my $test_file = '/tmp/devlog-lsf';
 
 END { unlink $test_file }
 
-my $payload_len = 47 + length "$$";
-
 for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
 
     $p = ($proto == LOG_UDP ? 'udp' : $proto == LOG_TCP ? 'tcp' : 'unix');
@@ -24,42 +23,52 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
     my ($listener, $test_host) = listener();
     ok($listener, "$p: listen on " . ($proto == LOG_UNIX ? $test_host : " port $test_port"));
 
-    my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, 4, 6, "localhost", "test");
+    my @params = (LOG_AUTH, LOG_INFO, "localhost", "test");
+    my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
     ok($logger, "$p: ->new returns something");
 
     is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
 
     my $receiver = l2r($listener);
 
+    my ($msg, $expected);
+
     {
-        my $sent = eval { $logger->send("testing 1", time) };
+        $msg = 'testing 1';
+        $expected = expected_payload(@params, $$, $msg);
+
+        my $sent = eval { $logger->send($msg, time) };
         ok(!$@, "$p: ->send with time doesn't throw");
-        is($sent, $payload_len, "$p: ->send sent whole payload");
+        is($sent, length $expected, "$p: ->send sent whole payload");
 
         my $found = wait_for_readable($receiver);
         ok($found, "$p: didn't time out while waiting for data");
 
         if ($found) {
             $receiver->recv(my $buf, 256);
-            is(length $buf, $payload_len, "$p: payload is right size");
+
             ok($buf =~ /^<38>/, "$p: ->send with time has the right priority");
-            ok($buf =~ /testing 1$/, "$p: ->send with time sends right payload");
+            ok($buf =~ /$msg$/, "$p: ->send with time has the right message");
+            is($buf, $expected, "$p: ->send with time has correct payload");
         }
     }
 
     {
-        my $sent = eval { $logger->send("testing 2") };
+        $msg = 'testing 2';
+        $expected = expected_payload(@params, $$, $msg);
+
+        my $sent = eval { $logger->send($msg) };
         ok(!$@, "$p: ->send without time doesn't throw");
-        is($sent, $payload_len, "$p: ->send sent whole payload");
+        is($sent, length $expected, "$p: ->send sent whole payload");
 
         my $found = wait_for_readable($receiver);
         ok($found, "$p: didn't time out while waiting for data");
 
         if ($found) {
             $receiver->recv(my $buf, 256);
-            is(length $buf, $payload_len, "$p: payload is right size");
             ok($buf =~ /^<38>/, "$p: ->send without time has the right priority");
-            ok($buf =~ /testing 2$/, "$p: ->send without time sends right payload");
+            ok($buf =~ /$msg$/, "$p: ->send without time sends right payload");
+            is($buf, $expected, "$p: ->send without time has correct payload");
         }
     }
 
@@ -70,8 +79,9 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
             undef $listener;
             unlink $test_file;
         }
+
         ($listener, $test_host) = listener();
-        $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, LOG_AUTH, LOG_INFO, "localhost", "test");
+        $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
 
         $listener->accept if $p eq 'tcp' or $p eq 'unix'; # ignore first connection
 
@@ -86,25 +96,28 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
         ok(!$@, "$p: ->set_priority doesn't throw");
 
         eval {
-            $logger->set_sender("otherhost");
+            $logger->set_sender('otherhost');
         };
         ok(!$@, "$p: ->set_sender doesn't throw");
 
         eval {
-            $logger->set_name("test2");
+            $logger->set_name('test2');
         };
         ok(!$@, "$p: ->set_name doesn't throw");
 
         eval {
-            $logger->set_pid("12345");
+            $logger->set_pid(12345);
         };
-        ok(!$@, "$p: ->set_name doesn't throw");
+        ok(!$@, "$p: ->set_pid doesn't throw");
 
         my $receiver = l2r($listener);
 
-        my $sent = eval { $logger->send("testing 3") };
+        $msg = "testing 3";
+        $expected = expected_payload(LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg);
+
+        my $sent = eval { $logger->send($msg) };
         ok(!$@, "$p: ->send after accessors doesn't throw");
-        is($sent, 53, "$p: ->send sent whole payload");
+        is($sent, length $expected, "$p: ->send sent whole payload");
 
         my $found = wait_for_readable($receiver);
         ok($found, "$p: didn't time out while listening");
@@ -112,15 +125,23 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
         if ($found) {
             $receiver->recv(my $buf, 256);
             ok($buf, "$p: send after setReceiver went to correct port");
-            is(length $buf, 53, "$p: payload is right size");
             ok($buf =~ /^<58>/, "$p: ->send after setPriority has the right priority");
             ok($buf =~ /otherhost/, "$p: ->send after setSender has the right sender");
             ok($buf =~ /test2\[/, "$p: ->send after setName has the right name");
             ok($buf =~ /\[12345\]/, "$p: ->send after setName has the right pid");
-            ok($buf =~ /testing 3$/, "$p: ->send after accessors sends right payload");
+            ok($buf =~ /$msg$/, "$p: ->send after accessors sends right message");
+            is($buf, $expected, "$p: ->send after accessors has right payload");
         }
     };
     diag($@) if $@;
+}
+
+sub expected_payload {
+    my ($facility, $severity, $sender, $name, $pid, $msg) = @_;
+    return sprintf "<%d>%s %s %s[%d]: %s",
+        ($facility << 3) | $severity,
+        strftime("%h %e %T", localtime(time)),
+        $sender, $name, $pid, $msg;
 }
 
 sub listener {
