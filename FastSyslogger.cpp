@@ -73,7 +73,7 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
         raddress.sun_family = AF_UNIX;
         strcpy(raddress.sun_path, hostname);
         p_address = (const struct sockaddr*) &raddress;
-        address_len = strlen(raddress.sun_path) + sizeof(raddress.sun_family);
+        address_len = sizeof(raddress);
 
         // construct socket
         sock_ = socket(AF_UNIX, SOCK_STREAM, 0);
