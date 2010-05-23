@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.30  Sat May 22 17:57:39 PDT 2010
+        - s/AF_FILE/AF_UNIX/ to make FreeBSD happy
 0.29  Mon May 17 16:19:45 PDT 2010
         - Additional testing of payload
 0.28  Mon Jan 11 13:15:10 PST 2010

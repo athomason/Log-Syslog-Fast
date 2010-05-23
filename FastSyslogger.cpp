@@ -76,7 +76,7 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
         address_len = strlen(raddress.sun_path) + sizeof(raddress.sun_family);
 
         // construct socket
-        sock_ = socket(AF_FILE, SOCK_STREAM, 0);
+        sock_ = socket(AF_UNIX, SOCK_STREAM, 0);
     }
     else
         throw "bad protocol";

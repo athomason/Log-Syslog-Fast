@@ -7,7 +7,7 @@ use warnings;
 require Exporter;
 use Log::Syslog::Constants ();
 
-our $VERSION = '0.29';
+our $VERSION = '0.30';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
