@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More tests => 3 * 30 + 1;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Log::Syslog::Constants ':all';
