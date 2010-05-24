@@ -21,7 +21,8 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
     $p = ($proto == LOG_UDP ? 'udp' : $proto == LOG_TCP ? 'tcp' : 'unix');
 
     my ($listener, $test_host) = listener();
-    ok($listener, "$p: listen on " . ($proto == LOG_UNIX ? $test_host : " port $test_port"));
+    ok($listener, "$p: listen on " . ($proto == LOG_UNIX ? $test_host : " port $test_port")) or
+        diag("listen failed: $!");
 
     my @params = (LOG_AUTH, LOG_INFO, "localhost", "test");
     my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
