@@ -27,9 +27,8 @@ CODE:
     try {
         RETVAL = new FastSyslogger(proto, hostname, port, facility, severity, sender, name);
     }
-    catch (...) {
-        // squash exceptions and return undef on failure
-        XSRETURN_UNDEF;
+    catch (const char*& s) {
+        croak("Error in ->new: %s", s);
     }
     if (!RETVAL) XSRETURN_UNDEF;
 OUTPUT:

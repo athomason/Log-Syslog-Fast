@@ -24,7 +24,8 @@ FastSyslogger::FastSyslogger(int proto, char* hostname, int port, int facility, 
 
 FastSyslogger::~FastSyslogger()
 {
-    close(sock_);
+    if (close(sock_))
+        throw strerror(errno);
 }
 
 void
@@ -82,14 +83,14 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
         throw "bad protocol";
 
     if (sock_ < 0)
-        throw "socket failure";
+        throw strerror(errno);
 
     // close the socket after exec to match normal Perl behavior for sockets
     fcntl(sock_, F_SETFD, FD_CLOEXEC);
 
     // connect the socket
     if (connect(sock_, p_address, address_len) != 0)
-        throw "connect failure";
+        throw strerror(errno);
 }
 
 void
@@ -123,7 +124,8 @@ FastSyslogger::updatePrefix(time_t t) {
     char timestr[30];
     strftime(timestr, 30, "%h %e %T", localtime(&t));
 
-    prefix_len_ = sprintf(linebuf_, "<%d>%s %s %s[%d]: ",
+    prefix_len_ = snprintf(linebuf_, LOG_BUFSIZE,
+        "<%d>%s %s %s[%d]: ",
         priority_, timestr, sender_, name_, pid_
     );
 
@@ -152,7 +154,7 @@ FastSyslogger::send(char* msg, int len, time_t t)
     int ret = ::send(sock_, linebuf_, prefix_len_ + msg_len, MSG_DONTWAIT);
 
     if (ret < 0)
-        throw "send failed";
+        throw strerror(errno);
 
     return ret;
 }

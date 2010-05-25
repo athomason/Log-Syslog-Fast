@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3 * 30 + 1;
+use Test::More tests => 3 * 31 + 1;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Log::Syslog::Constants ':all';
@@ -27,6 +27,9 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
     my @params = (LOG_AUTH, LOG_INFO, "localhost", "test");
     my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
     ok($logger, "$p: ->new returns something");
+
+    eval { Log::Syslog::Fast->new($proto, '%^!/0', 0, @params) };
+    like($@, qr/^Error in ->new/, "$p: bad ->new call throws an exception");
 
     is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
 
