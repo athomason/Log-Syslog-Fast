@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.32  Thu May 27 16:37:28 PDT 2010
+        - Extra error checking
 0.31_01 Mon May 24 14:38:33 PDT 2010
         - Bump version to push test verbosity change to cpan
 0.31  Sun May 23 15:07:04 PDT 2010
