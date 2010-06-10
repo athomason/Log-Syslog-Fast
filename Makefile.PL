@@ -1,7 +1,12 @@
 use 5.008005;
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
+
+# bail early if C++ compiler is missing
+if (system 'g++ --version >/dev/null') {
+    warn "You don't appear to have an executable g++\n";
+    exit 0;
+}
+
 WriteMakefile(
     NAME              => 'Log::Syslog::Fast',
     VERSION_FROM      => 'lib/Log/Syslog/Fast.pm', # finds $VERSION
