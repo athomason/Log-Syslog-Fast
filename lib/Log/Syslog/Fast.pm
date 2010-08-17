@@ -7,7 +7,7 @@ use warnings;
 require Exporter;
 use Log::Syslog::Constants ();
 
-our $VERSION = '0.33';
+our $VERSION = '0.34';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -154,6 +154,29 @@ Change what is sent as the name of the sending program.
 =item $logger-E<gt>set_pid($name)
 
 Change what is sent as the process id of the sending program.
+
+=back
+
+=head1 UNREACHABLE SERVERS
+
+If the remote syslogd is unreachable, certain methods may throw an exception:
+
+=over 4
+
+=item * LOG_TCP and LOG_UNIX
+
+If the server is unreachable at connect time, I<< ->new >> will fail with an
+exception. If an established connection is closed remotely, I<< ->send >> will
+fail with an exception.
+
+=item * LOG_UDP
+
+As UDP is connectionless, I<< ->new >> will not throw an error as no attempt to
+connect is made then. However, if the remote server starts or becomes unreachable and
+1) the host is alive but 2) not listening on the specified port, and
+3) ICMP packets are routable to the client, an exception may be thrown by I<<
+->send >>; note that this may happen only on the second call, and subsequently
+every other one.
 
 =back
 

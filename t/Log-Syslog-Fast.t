@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3 * 31 + 1;
+use Test::More tests => 3 * 32 + 3;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Log::Syslog::Constants ':all';
@@ -14,6 +14,8 @@ my $p;
 my $test_port = 10514;
 my $test_file = '/tmp/devlog-lsf';
 
+# clean up after self and prior selves
+unlink $test_file;
 END { unlink $test_file }
 
 for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
@@ -138,6 +140,30 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
         }
     };
     diag($@) if $@;
+
+    # test failure behavior when server is unreachable
+
+    undef $listener; # close server
+    undef $logger;
+
+    if ($p eq 'udp') {
+        # connectionless udp should fail on 2nd call to ->send, after ICMP
+        # error is noticed by kernel
+
+        my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
+        ok($logger, "$p: ->new doesn't throw on connect to missing server");
+
+        eval { $logger->send('test1') };
+        ok(!$@, "$p: 1st ->send to missing server doesn't throw");
+
+        eval { $logger->send('test2') };
+        like($@, qr/Connection refused/, "$p: 2nd ->send to missing server does throw");
+    }
+    else {
+        # connected protocols should fail on connect, i.e. ->new
+        eval { Log::Syslog::Fast->new($proto, $test_host, $test_port, @params); };
+        like($@, qr/^Error in ->new/, "$p: ->new throws on connect to missing server");
+    }
 }
 
 sub expected_payload {

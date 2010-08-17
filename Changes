@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.34  Mon Aug 16 18:53:09 PDT 2010
+        - Test that unreachable server fails on connect for TCP/UNIX, or 2nd connect for UDP
+        - Document that behavior (thanks to Adam Kennedy)
 0.33  Wed Jun  9 18:08:47 PDT 2010
         - Bail early if g++ is missing
 0.32  Thu May 27 16:37:28 PDT 2010
