@@ -89,8 +89,16 @@ FastSyslogger::setReceiver(int proto, char* hostname, int port)
     fcntl(sock_, F_SETFD, FD_CLOEXEC);
 
     // connect the socket
-    if (connect(sock_, p_address, address_len) != 0)
-        throw strerror(errno);
+    if (connect(sock_, p_address, address_len) != 0) {
+        // some servers (rsyslog) may use SOCK_DGRAM for unix domain sockets
+        if (proto == 2 && errno == EPROTOTYPE) {
+            sock_ = socket(AF_UNIX, SOCK_DGRAM, 0);
+            if (connect(sock_, p_address, address_len) != 0)
+                throw strerror(errno);
+        }
+        else
+            throw strerror(errno);
+    }
 }
 
 void
