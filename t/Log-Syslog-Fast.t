@@ -1,7 +1,9 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3 * 32 + 3;
+use Test::More tests => 142;
+use File::Temp 'tempdir';
+use IO::Select;
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use Log::Syslog::Constants ':all';
@@ -9,117 +11,138 @@ use POSIX 'strftime';
 
 BEGIN { use_ok('Log::Syslog::Fast', ':protos') };
 
-my $p;
+my $test_dir = tempdir(CLEANUP => 1);
 
-my $test_port = 10514;
-my $test_file = '/tmp/devlog-lsf';
+my %servers = (
+    tcp => sub {
+        my $listener = IO::Socket::INET->new(
+            Proto       => 'tcp',
+            Type        => SOCK_STREAM,
+            LocalHost   => 'localhost',
+            LocalPort   => 0,
+            Listen      => 5,
+        ) or die $!;
+        return StreamServer->new(
+            listener    => $listener,
+            proto       => LOG_TCP,
+            address     => [$listener->sockhost, $listener->sockport],
+        );
+    },
+    udp => sub {
+        my $listener = IO::Socket::INET->new(
+            Proto       => 'udp',
+            Type        => SOCK_DGRAM,
+            LocalHost   => 'localhost',
+            LocalPort   => 0,
+        ) or die $!;
+        return DgramServer->new(
+            listener    => $listener,
+            proto       => LOG_UDP,
+            address     => [$listener->sockhost, $listener->sockport],
+        );
+    },
+    unix_stream => sub {
+        my $listener = IO::Socket::UNIX->new(
+            Local   => "$test_dir/stream",
+            Type    => SOCK_STREAM,
+            Listen  => 1,
+        ) or die $!;
+        return StreamServer->new(
+            listener    => $listener,
+            proto       => LOG_UNIX,
+            address     => [$listener->hostpath, 0],
+        );
+    },
+    unix_dgram => sub {
+        my $listener = IO::Socket::UNIX->new(
+            Local   => "$test_dir/dgram",
+            Type    => SOCK_DGRAM,
+            Listen  => 1,
+        ) or die $!;
+        return DgramServer->new(
+            listener    => $listener,
+            proto       => LOG_UNIX,
+            address     => [$listener->hostpath, 0],
+        );
+    },
+);
 
-# clean up after self and prior selves
-unlink $test_file;
-END { unlink $test_file }
+my @params = (LOG_AUTH, LOG_INFO, 'localhost', 'test');
 
-for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
-
-    $p = ($proto == LOG_UDP ? 'udp' : $proto == LOG_TCP ? 'tcp' : 'unix');
-
-    my ($listener, $test_host) = listener();
-    ok($listener, "$p: listen on " . ($proto == LOG_UNIX ? $test_host : " port $test_port")) or
-        diag("listen failed: $!");
-
-    my @params = (LOG_AUTH, LOG_INFO, "localhost", "test");
-    my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
-    ok($logger, "$p: ->new returns something");
-
+for my $proto (LOG_TCP, LOG_UDP, LOG_UNIX) {
     eval { Log::Syslog::Fast->new($proto, '%^!/0', 0, @params) };
-    like($@, qr/^Error in ->new/, "$p: bad ->new call throws an exception");
+    like($@, qr/^Error in ->new/, "$proto: bad ->new call throws an exception");
+}
 
-    is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
+for my $p (sort keys %servers) {
+    my $listen = $servers{$p};
 
-    my $receiver = l2r($listener);
-
-    my ($msg, $expected);
-
-    {
-        $msg = 'testing 1';
-        $expected = expected_payload(@params, $$, $msg);
-
-        my $sent = eval { $logger->send($msg, time) };
-        ok(!$@, "$p: ->send with time doesn't throw");
-        is($sent, length $expected, "$p: ->send sent whole payload");
-
-        my $found = wait_for_readable($receiver);
-        ok($found, "$p: didn't time out while waiting for data");
-
-        if ($found) {
-            $receiver->recv(my $buf, 256);
-
-            ok($buf =~ /^<38>/, "$p: ->send with time has the right priority");
-            ok($buf =~ /$msg$/, "$p: ->send with time has the right message");
-            is($buf, $expected, "$p: ->send with time has correct payload");
-        }
-    }
-
-    {
-        $msg = 'testing 2';
-        $expected = expected_payload(@params, $$, $msg);
-
-        my $sent = eval { $logger->send($msg) };
-        ok(!$@, "$p: ->send without time doesn't throw");
-        is($sent, length $expected, "$p: ->send sent whole payload");
-
-        my $found = wait_for_readable($receiver);
-        ok($found, "$p: didn't time out while waiting for data");
-
-        if ($found) {
-            $receiver->recv(my $buf, 256);
-            ok($buf =~ /^<38>/, "$p: ->send without time has the right priority");
-            ok($buf =~ /$msg$/, "$p: ->send without time sends right payload");
-            is($buf, $expected, "$p: ->send without time has correct payload");
-        }
-    }
-
+    # basic behavior
     eval {
-        $test_port++;
-        if ($p eq 'unix') {
-            undef $logger;
-            undef $listener;
-            unlink $test_file;
+        my $server = $listen->();
+        ok($server->{listener}, "$p: listen") or diag("listen failed: $!");
+
+        my $logger = $server->connect(@params);
+        ok($logger, "$p: ->new returns something");
+        is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
+
+        my $receiver = $server->accept;
+        ok($receiver, "$p: accepted");
+
+        for my $config (['without time'], ['with time', time()]) {
+            my ($msg, @extra) = @$config;
+
+            my $expected = expected_payload(@params, $$, $msg);
+
+            my $sent = eval { $logger->send($msg, @extra) };
+            ok(!$@, "$p: ->send $msg doesn't throw");
+            is($sent, length $expected, "$p: ->send $msg sent whole payload");
+
+            my $found = wait_for_readable($receiver);
+            ok($found, "$p: didn't time out while waiting for data $msg");
+
+            if ($found) {
+                $receiver->recv(my $buf, 256);
+
+                ok($buf =~ /^<38>/, "$p: ->send $msg has the right priority");
+                ok($buf =~ /$msg$/, "$p: ->send $msg has the right message");
+                is($buf, $expected, "$p: ->send $msg has correct payload");
+            }
         }
+    };
+    diag($@) if $@;
 
-        ($listener, $test_host) = listener();
-        $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
+    # write accessors
+    eval {
 
-        $listener->accept if $p eq 'tcp' or $p eq 'unix'; # ignore first connection
+        my $server = $listen->();
+        my $logger = $server->connect(@params);
+
+        # ignore first connection for stream protos since reconnect is expected
+        $server->accept();
 
         eval {
-            $logger->set_receiver($proto, $test_host, $test_port);
+            # this method triggers a reconnect for stream protocols
+            $logger->set_receiver($server->proto, $server->address);
         };
         ok(!$@, "$p: ->set_receiver doesn't throw");
 
-        eval {
-            $logger->set_priority(LOG_NEWS, LOG_CRIT);
-        };
+        eval { $logger->set_priority(LOG_NEWS, LOG_CRIT) };
         ok(!$@, "$p: ->set_priority doesn't throw");
 
-        eval {
-            $logger->set_sender('otherhost');
-        };
+        eval { $logger->set_sender('otherhost') };
         ok(!$@, "$p: ->set_sender doesn't throw");
 
-        eval {
-            $logger->set_name('test2');
-        };
+        eval { $logger->set_name('test2') };
         ok(!$@, "$p: ->set_name doesn't throw");
 
-        eval {
-            $logger->set_pid(12345);
-        };
+        eval { $logger->set_pid(12345) };
         ok(!$@, "$p: ->set_pid doesn't throw");
 
-        my $receiver = l2r($listener);
+        my $receiver = $server->accept;
 
-        $msg = "testing 3";
-        $expected = expected_payload(LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg);
+        my $msg = "testing 3";
+        my $expected = expected_payload(LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg);
 
         my $sent = eval { $logger->send($msg) };
         ok(!$@, "$p: ->send after accessors doesn't throw");
@@ -142,28 +165,78 @@ for my $proto (LOG_UDP, LOG_TCP, LOG_UNIX) {
     diag($@) if $@;
 
     # test failure behavior when server is unreachable
+    eval {
 
-    undef $listener; # close server
-    undef $logger;
+        # test when server is initially available but goes away
+        my $server = $listen->();
+        my $logger = $server->connect(@params);
+        $server->close();
 
-    if ($p eq 'udp') {
-        # connectionless udp should fail on 2nd call to ->send, after ICMP
-        # error is noticed by kernel
+        my $piped = 0;
+        local $SIG{PIPE} = sub { $piped++ };
+        eval { $logger->send("testclosed") };
+        if ($p eq 'tcp') {
+            like($@, qr/Connection reset by peer/, "$p: ->send throws on server close");
+        }
+        elsif ($p eq 'udp') {
+            ok(!$@, "$p: ->send doesn't throw on server close");
+        }
+        elsif ($p eq 'unix_dgram') {
+            like($@, qr/Connection refused/, "$p: ->send throws on server close");
+        }
+        elsif ($p eq 'unix_stream') {
+            ok($piped, "$p: ->send raises SIGPIPE on server close");
+        }
 
-        my $logger = Log::Syslog::Fast->new($proto, $test_host, $test_port, @params);
-        ok($logger, "$p: ->new doesn't throw on connect to missing server");
+        # test when server is not initially available
 
-        eval { $logger->send('test1') };
-        ok(!$@, "$p: 1st ->send to missing server doesn't throw");
+        # increment peer port to get one that (probably) wasn't recently used;
+        # otherwise UDP/ICMP business doesn't work right on at least linux 2.6.18
+        $server->{address}[1]++;
 
-        eval { $logger->send('test2') };
-        like($@, qr/Connection refused/, "$p: 2nd ->send to missing server does throw");
-    }
-    else {
-        # connected protocols should fail on connect, i.e. ->new
-        eval { Log::Syslog::Fast->new($proto, $test_host, $test_port, @params); };
-        like($@, qr/^Error in ->new/, "$p: ->new throws on connect to missing server");
-    }
+        if ($p eq 'udp') {
+            # connectionless udp should fail on 2nd call to ->send, after ICMP
+            # error is noticed by kernel
+
+            my $logger = $server->connect(@params);
+            ok($logger, "$p: ->new doesn't throw on connect to missing server");
+
+            for my $n (1..2) {
+                eval { $logger->send("test$n") };
+                ok(!$@, "$p: odd ->send to missing server doesn't throw");
+
+                eval { $logger->send("test$n") };
+                like($@, qr/Connection refused/, "$p: even ->send to missing server does throw");
+            }
+        }
+        else {
+            # connected protocols should fail on connect, i.e. ->new
+            eval { Log::Syslog::Fast->new($server->proto, $server->address, @params); };
+            like($@, qr/^Error in ->new/, "$p: ->new throws on connect to missing server");
+        }
+    };
+    diag($@) if $@;
+}
+
+# test LOG_UNIX with nonexistent/non-sock endpoint
+{
+    my $filename = "$test_dir/fake";
+
+    my $fake_server = DgramServer->new(
+        listener    => 1,
+        proto       => LOG_UNIX,
+        address     => [$filename, 0],
+    );
+
+    eval {
+        $fake_server->connect(@params);
+    };
+    like($@, qr/No such file/, 'unix: ->new with missing file throws');
+
+    open my $fh, '>', $filename or die "couldn't create fake socket $filename: $!";
+
+    eval { $fake_server->connect(@params); };
+    like($@, qr/Connection refused/, 'unix: ->new with non-sock throws');
 }
 
 sub expected_payload {
@@ -174,39 +247,77 @@ sub expected_payload {
         $sender, $name, $pid, $msg;
 }
 
-sub listener {
-    if ($p eq 'unix') {
-        return (IO::Socket::UNIX->new(
-            Local   => $test_file,
-            Listen  => 1,
-        ), $test_file);
-    }
-    else {
-        return (IO::Socket::INET->new(
-            Proto       => $p,
-            LocalHost   => 'localhost',
-            LocalPort   => $test_port,
-            ($p eq 'tcp' ? (Listen => 5) : ()),
-            Reuse       => 1,
-        ), 'localhost');
-    }
-}
-
-sub l2r {
-    my $listener = shift;
-    return $listener if $p eq 'udp';
-    if ($p eq 'tcp' or $p eq 'unix') {
-        my $receiver = $listener->accept;
-        $receiver->blocking(0);
-        return $receiver;
-    }
-}
-
 # use select so test won't block on failure
 sub wait_for_readable {
     my $sock = shift;
-    vec(my $rin = '', fileno($sock), 1) = 1;
-    return select(my $rout = $rin, undef, undef, 1);
+    return IO::Select->new($sock)->can_read(1);
+}
+
+package ServerCreator;
+
+sub new {
+    my $class = shift;
+    return bless {label => $_[0], listen => $_[1]}, $class;
+}
+
+
+sub listen {
+    my $self = shift;
+    $self->{listen}->();
+}
+
+package Server;
+
+sub new {
+    my $class = shift;
+    return bless {@_}, $class;
+}
+sub proto {
+    my $self = shift;
+    return $self->{proto};
+}
+
+sub address {
+    my $self = shift;
+    return @{ $self->{address} };
+}
+
+sub connect {
+    my $self = shift;
+    return Log::Syslog::Fast->new($self->proto, $self->address, @_);
+}
+
+sub close {
+    my $self = shift;
+    $self->{listener} = undef;
+}
+
+# remove unix socket file on server close
+sub DESTROY {
+    my $self = shift;
+    if ($self->{address}[1] == 0) {
+        unlink $self->{address}[0];
+    }
+}
+
+package StreamServer;
+
+use base 'Server';
+
+sub accept {
+    my $self = shift;
+    my $receiver = $self->{listener}->accept;
+    $receiver->blocking(0);
+    return $receiver;
+}
+
+package DgramServer;
+
+use base 'Server';
+
+sub accept {
+    my $self = shift;
+    return $self->{listener};
 }
 
 # vim: filetype=perl

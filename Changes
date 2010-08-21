@@ -1,6 +1,12 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.35  Fri Aug 20 17:40:31 PDT 2010
+        - Overhaul tests to be more readable and comprehensive
+        - Support fallback to SOCK_DGRAM with LOG_UNIX should SOCK_STREAM fail
+          (thanks to tim.esselens)
+        - Add additional tests and docs for LOG_UNIX
 0.34  Mon Aug 16 18:53:09 PDT 2010
-        - Test that unreachable server fails on connect for TCP/UNIX, or 2nd connect for UDP
+        - Test that unreachable server fails on connect for TCP/UNIX, or 2nd
+          connect for UDP
         - Document that behavior (thanks to Adam Kennedy)
 0.33  Wed Jun  9 18:08:47 PDT 2010
         - Bail early if g++ is missing
@@ -26,7 +32,8 @@ Revision history for Perl extension Log::Syslog::Fast.
 0.25  Thu Nov 19 12:40:03 PST 2009
         - Make log socket be close-on-exec
 0.24  Thu Oct 15 22:20:07 PDT 2009
-        - Fix porting bug in Log::Syslog::Fast::Simple; https://rt.cpan.org/Ticket/Display.html?id=50548
+        - Fix porting bug in Log::Syslog::Fast::Simple;
+          https://rt.cpan.org/Ticket/Display.html?id=50548
 0.23  Thu Jul  2 16:23:09 PST 2009
         - Add shipit config
 0.22  Thu Jul  2 16:03:33 PST 2009

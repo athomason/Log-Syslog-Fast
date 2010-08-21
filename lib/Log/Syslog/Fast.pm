@@ -7,7 +7,7 @@ use warnings;
 require Exporter;
 use Log::Syslog::Constants ();
 
-our $VERSION = '0.34';
+our $VERSION = '0.35';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -81,6 +81,10 @@ If LOG_TCP or LOG_UNIX is used, calls to $logger-E<gt>send() will block until
 remote receipt of the message is confirmed. If LOG_UDP is used, the call will
 never block and may fail if insufficient buffer space exists in the network
 stack.
+
+With LOG_UNIX, I<< ->new >> will first attempt to connect with a SOCK_STREAM
+socket, and then try a SOCK_DGRAM if that is what the server expects (e.g.
+rsyslog).
 
 =item $hostname
 
@@ -159,11 +163,12 @@ Change what is sent as the process id of the sending program.
 
 =head1 UNREACHABLE SERVERS
 
-If the remote syslogd is unreachable, certain methods may throw an exception:
+If the remote syslogd is unreachable, certain methods may throw an exception or
+raise a signal:
 
 =over 4
 
-=item * LOG_TCP and LOG_UNIX
+=item * LOG_TCP
 
 If the server is unreachable at connect time, I<< ->new >> will fail with an
 exception. If an established connection is closed remotely, I<< ->send >> will
@@ -174,9 +179,17 @@ fail with an exception.
 As UDP is connectionless, I<< ->new >> will not throw an error as no attempt to
 connect is made then. However, if the remote server starts or becomes unreachable and
 1) the host is alive but 2) not listening on the specified port, and
-3) ICMP packets are routable to the client, an exception may be thrown by I<<
+3) ICMP packets are routable to the client, an exception B<may> be thrown by I<<
 ->send >>; note that this may happen only on the second call, and subsequently
-every other one.
+every other one. This behavior also depends on specific kernel interactions.
+
+=item * LOG_UNIX
+
+With both SOCK_STREAM- and SOCK_DGRAM-based servers, I<< ->new >> will throw an
+exception if the socket is missing or not connectable.
+
+With SOCK_DGRAM, I<< ->send >> to a peer that went away will throw. With
+SOCK_STREAM, I<< ->send >> to a peer that went away will raise SIGPIPE.
 
 =back
 
@@ -190,9 +203,13 @@ L<Log::Syslog::Constants>
 
 L<Sys::Syslog>
 
+=head1 BUGS
+
+LOG_UNIX with SOCK_DGRAM has not been well tested.
+
 =head1 AUTHOR
 
-Adam Thomason, E<lt>athomason@sixapart.comE<gt>
+Adam Thomason, E<lt>athomason@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
