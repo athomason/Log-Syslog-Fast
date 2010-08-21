@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.36  Sat Aug 21 16:49:20 PDT 2010
+        - Don't test against OS- and locale-specific strerror(3) strings
 0.35  Fri Aug 20 17:40:31 PDT 2010
         - Overhaul tests to be more readable and comprehensive
         - Support fallback to SOCK_DGRAM with LOG_UNIX should SOCK_STREAM fail

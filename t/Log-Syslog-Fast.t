@@ -67,6 +67,8 @@ my %servers = (
     },
 );
 
+# strerror(3) messages on linux in the "C" locale are included below for reference
+
 my @params = (LOG_AUTH, LOG_INFO, 'localhost', 'test');
 
 for my $proto (LOG_TCP, LOG_UDP, LOG_UNIX) {
@@ -176,13 +178,15 @@ for my $p (sort keys %servers) {
         local $SIG{PIPE} = sub { $piped++ };
         eval { $logger->send("testclosed") };
         if ($p eq 'tcp') {
-            like($@, qr/Connection reset by peer/, "$p: ->send throws on server close");
+            # "Connection reset by peer"
+            like($@, qr/Error while sending/, "$p: ->send throws on server close");
         }
         elsif ($p eq 'udp') {
             ok(!$@, "$p: ->send doesn't throw on server close");
         }
         elsif ($p eq 'unix_dgram') {
-            like($@, qr/Connection refused/, "$p: ->send throws on server close");
+            # "Connection refused"
+            like($@, qr/Error while sending/, "$p: ->send throws on server close");
         }
         elsif ($p eq 'unix_stream') {
             ok($piped, "$p: ->send raises SIGPIPE on server close");
@@ -206,7 +210,8 @@ for my $p (sort keys %servers) {
                 ok(!$@, "$p: odd ->send to missing server doesn't throw");
 
                 eval { $logger->send("test$n") };
-                like($@, qr/Connection refused/, "$p: even ->send to missing server does throw");
+                # "Connection refused"
+                like($@, qr/Error while sending/, "$p: even ->send to missing server does throw");
             }
         }
         else {
@@ -231,12 +236,14 @@ for my $p (sort keys %servers) {
     eval {
         $fake_server->connect(@params);
     };
-    like($@, qr/No such file/, 'unix: ->new with missing file throws');
+    # "No such file"
+    like($@, qr/Error in ->new/, 'unix: ->new with missing file throws');
 
     open my $fh, '>', $filename or die "couldn't create fake socket $filename: $!";
 
     eval { $fake_server->connect(@params); };
-    like($@, qr/Connection refused/, 'unix: ->new with non-sock throws');
+    # "Connection refused"
+    like($@, qr/Error in ->new/, 'unix: ->new with non-sock throws');
 }
 
 sub expected_payload {
