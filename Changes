@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.37  Sun Aug 22 18:21:11 PDT 2010
+        - BSDs appear to raise SIGPIPE on TCP close instead of failing sendto
+          syscall, so expect either failure in test
 0.36  Sat Aug 21 16:49:20 PDT 2010
         - Don't test against OS- and locale-specific strerror(3) strings
 0.35  Fri Aug 20 17:40:31 PDT 2010

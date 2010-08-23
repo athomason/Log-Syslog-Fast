@@ -178,8 +178,8 @@ for my $p (sort keys %servers) {
         local $SIG{PIPE} = sub { $piped++ };
         eval { $logger->send("testclosed") };
         if ($p eq 'tcp') {
-            # "Connection reset by peer"
-            like($@, qr/Error while sending/, "$p: ->send throws on server close");
+            # "Connection reset by peer" on linux, sigpipe on bsds
+            ok($@ || $piped, "$p: ->send throws on server close");
         }
         elsif ($p eq 'udp') {
             ok(!$@, "$p: ->send doesn't throw on server close");
