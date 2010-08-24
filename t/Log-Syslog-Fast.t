@@ -155,11 +155,11 @@ for my $p (sort keys %servers) {
 
         if ($found) {
             $receiver->recv(my $buf, 256);
-            ok($buf, "$p: send after setReceiver went to correct port");
-            ok($buf =~ /^<58>/, "$p: ->send after setPriority has the right priority");
-            ok($buf =~ /otherhost/, "$p: ->send after setSender has the right sender");
-            ok($buf =~ /test2\[/, "$p: ->send after setName has the right name");
-            ok($buf =~ /\[12345\]/, "$p: ->send after setName has the right pid");
+            ok($buf, "$p: send after set_receiver went to correct port");
+            ok($buf =~ /^<58>/, "$p: ->send after set_priority has the right priority");
+            ok($buf =~ /otherhost/, "$p: ->send after set_sender has the right sender");
+            ok($buf =~ /test2\[/, "$p: ->send after set_name has the right name");
+            ok($buf =~ /\[12345\]/, "$p: ->send after set_name has the right pid");
             ok($buf =~ /$msg$/, "$p: ->send after accessors sends right message");
             is($buf, $expected, "$p: ->send after accessors has right payload");
         }

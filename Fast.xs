@@ -15,15 +15,15 @@ INCLUDE: const-xs.inc
 PROTOTYPES: ENABLE
 
 FastSyslogger*
-FastSyslogger_alloc()
+FSL_alloc()
 CODE:
-    RETVAL = FastSyslogger_alloc();
+    RETVAL = FSL_alloc();
     if (!RETVAL) XSRETURN_UNDEF;
 OUTPUT:
     RETVAL
 
 int
-FastSyslogger_init(logger, proto, hostname, port, facility, severity, sender, name)
+FSL_init(logger, proto, hostname, port, facility, severity, sender, name)
     FastSyslogger* logger
     int proto
     char* hostname
@@ -34,51 +34,51 @@ FastSyslogger_init(logger, proto, hostname, port, facility, severity, sender, na
     char* name
 
 void
-FastSyslogger_destroy(logger)
+FSL_destroy(logger)
     FastSyslogger* logger
 
 int
-FastSyslogger_send(logger, logmsg, now)
+FSL_send(logger, logmsg, now)
     FastSyslogger* logger
     char* logmsg
     time_t now
 CODE:
-    RETVAL = FastSyslogger_send(logger, logmsg, strlen(logmsg), now);
+    RETVAL = FSL_send(logger, logmsg, strlen(logmsg), now);
 OUTPUT:
     RETVAL
 
 int
-FastSyslogger_setReceiver(logger, proto, hostname, port)
+FSL_set_receiver(logger, proto, hostname, port)
     FastSyslogger* logger
     int proto
     char* hostname
     int port
 
 void
-FastSyslogger_setPriority(logger, facility, severity)
+FSL_set_priority(logger, facility, severity)
     FastSyslogger* logger
     int facility
     int severity
 
 void
-FastSyslogger_setSender(logger, sender)
+FSL_set_sender(logger, sender)
     FastSyslogger* logger
     char* sender
 
 void
-FastSyslogger_setName(logger, name)
+FSL_set_name(logger, name)
     FastSyslogger* logger
     char* name
 
 void
-FastSyslogger_setPid(logger, pid)
+FSL_set_pid(logger, pid)
     FastSyslogger* logger
     int pid
 
 char*
-FastSyslogger_error(logger)
+FSL_error(logger)
     FastSyslogger* logger
 CODE:
-    RETVAL = logger->err_;
+    RETVAL = logger->err;
 OUTPUT:
     RETVAL

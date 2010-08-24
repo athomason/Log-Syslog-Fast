@@ -40,10 +40,10 @@ XSLoader::load('Log::Syslog::Fast', $VERSION);
 
 sub new {
     my $class = shift;
-    my $c_obj = FastSyslogger_alloc();
+    my $c_obj = FSL_alloc();
     $c_obj || die "couldn't create FastSyslogger object";
-    if (FastSyslogger_init($c_obj, @_) < 0) {
-        die 'Error in ->new: ' . FastSyslogger_error($c_obj);
+    if (FSL_init($c_obj, @_) < 0) {
+        die 'Error in ->new: ' . FSL_error($c_obj);
     }
     my $self = bless \$c_obj, $class;
     #use Data::Dump 'pp'; warn "created:" . pp [$c_obj, $self];
@@ -53,16 +53,16 @@ sub new {
 sub DESTROY {
     my $self = shift;
     #warn "destroying:" . pp [$self, $$self];
-    FastSyslogger_destroy($$self);
+    FSL_destroy($$self);
 }
 
 sub send {
     my ($self, $msg, $time) = @_;
 
     $time = time() unless defined $time;
-    my $ret = FastSyslogger_send($$self, $msg, $time);
+    my $ret = FSL_send($$self, $msg, $time);
     if ($ret < 0) {
-        die 'Error while sending: ' . FastSyslogger_error($$self);
+        die 'Error while sending: ' . FSL_error($$self);
     }
     return $ret;
 }
@@ -70,29 +70,29 @@ sub send {
 
 sub set_receiver {
     my $self = shift;
-    if (FastSyslogger_setReceiver($$self, @_) < 0) {
-        die 'Error in set_receiver: ' . FastSyslogger_error($$self);
+    if (FSL_set_receiver($$self, @_) < 0) {
+        die 'Error in set_receiver: ' . FSL_error($$self);
     }
 }
 
 sub set_priority {
     my $self = shift;
-    FastSyslogger_setPriority($$self, @_);
+    FSL_set_priority($$self, @_);
 }
 
 sub set_sender {
     my $self = shift;
-    FastSyslogger_setSender($$self, @_);
+    FSL_set_sender($$self, @_);
 }
 
 sub set_name {
     my $self = shift;
-    FastSyslogger_setName($$self, @_);
+    FSL_set_name($$self, @_);
 }
 
 sub set_pid {
     my $self = shift;
-    FastSyslogger_setPid($$self, @_);
+    FSL_set_pid($$self, @_);
 }
 
 1;

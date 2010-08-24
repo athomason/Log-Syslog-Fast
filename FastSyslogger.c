@@ -16,80 +16,80 @@ static
 void
 update_prefix(FastSyslogger* logger, time_t t)
 {
-    logger->last_time_ = t;
+    logger->last_time = t;
 
     char timestr[30];
     strftime(timestr, 30, "%h %e %T", localtime(&t));
 
-    logger->prefix_len_ = snprintf(logger->linebuf_, LOG_BUFSIZE,
+    logger->prefix_len = snprintf(logger->linebuf, LOG_BUFSIZE,
         "<%d>%s %s %s[%d]: ",
-        logger->priority_, timestr, logger->sender_, logger->name_, logger->pid_
+        logger->priority, timestr, logger->sender, logger->name, logger->pid
     );
 
     // cache the location in linebuf where msg should be pasted in
-    logger->msg_start_ = logger->linebuf_ + logger->prefix_len_;
+    logger->msg_start = logger->linebuf + logger->prefix_len;
 }
 
 FastSyslogger*
-FastSyslogger_alloc()
+FSL_alloc()
 {
     return malloc(sizeof(FastSyslogger));
 }
 
-FastSyslogger_init(
+FSL_init(
     FastSyslogger* logger, int proto, char* hostname, int port,
     int facility, int severity, char* sender, char* name)
 {
     if (!logger)
         return -1;
 
-    logger->pid_ = getpid();
-    strncpy(logger->sender_, sender, sizeof(logger->sender_) - 1);
-    strncpy(logger->name_, name, sizeof(logger->name_) - 1);
-    logger->priority_ = (facility << 3) | severity;
+    logger->pid = getpid();
+    strncpy(logger->sender, sender, sizeof(logger->sender) - 1);
+    strncpy(logger->name, name, sizeof(logger->name) - 1);
+    logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));
 
-    return FastSyslogger_setReceiver(logger, proto, hostname, port);
+    return FSL_set_receiver(logger, proto, hostname, port);
 }
 
 int
-FastSyslogger_destroy(FastSyslogger* logger)
+FSL_destroy(FastSyslogger* logger)
 {
-    int ret = close(logger->sock_);
+    int ret = close(logger->sock);
     free(logger);
     return ret;
 }
 
 void
-FastSyslogger_setPriority(FastSyslogger* logger, int facility, int severity)
+FSL_set_priority(FastSyslogger* logger, int facility, int severity)
 {
-    logger->priority_ = (facility << 3) | severity;
+    logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));
 }
 
 void
-FastSyslogger_setSender(FastSyslogger* logger, char* sender)
+FSL_set_sender(FastSyslogger* logger, char* sender)
 {
-    strncpy(logger->sender_, sender, sizeof(logger->sender_) - 1);
+    strncpy(logger->sender, sender, sizeof(logger->sender) - 1);
     update_prefix(logger, time(0));
 }
 
 void
-FastSyslogger_setName(FastSyslogger* logger, char* name)
+FSL_set_name(FastSyslogger* logger, char* name)
 {
-    strncpy(logger->name_, name, sizeof(logger->name_) - 1);
+    strncpy(logger->name, name, sizeof(logger->name) - 1);
     update_prefix(logger, time(0));
 }
 
 void
-FastSyslogger_setPid(FastSyslogger* logger, int pid)
+FSL_set_pid(FastSyslogger* logger, int pid)
 {
-    logger->pid_ = pid;
+    logger->pid = pid;
     update_prefix(logger, time(0));
 }
 
 int
-FastSyslogger_setReceiver(FastSyslogger* logger, int proto, char* hostname, int port)
+FSL_set_receiver(FastSyslogger* logger, int proto, char* hostname, int port)
 {
     const struct sockaddr* p_address;
     int address_len;
@@ -99,7 +99,7 @@ FastSyslogger_setReceiver(FastSyslogger* logger, int proto, char* hostname, int 
         // resolve the remote host
         struct hostent* host = gethostbyname(hostname);
         if (!host || !host->h_addr_list || !host->h_addr_list[0]) {
-            logger->err_ = "resolve failure";
+            logger->err = "resolve failure";
             return -1;
         }
 
@@ -114,20 +114,20 @@ FastSyslogger_setReceiver(FastSyslogger* logger, int proto, char* hostname, int 
         // construct socket
         if (proto == 0) {
             // LOG_UDP from FastSyslogger.pm
-            logger->sock_ = socket(AF_INET, SOCK_DGRAM, 0);
+            logger->sock = socket(AF_INET, SOCK_DGRAM, 0);
 
             // make the socket non-blocking
-            int flags = fcntl(logger->sock_, F_GETFL, 0);
-            fcntl(logger->sock_, F_SETFL, flags | O_NONBLOCK);
-            flags = fcntl(logger->sock_, F_GETFL, 0);
+            int flags = fcntl(logger->sock, F_GETFL, 0);
+            fcntl(logger->sock, F_SETFL, flags | O_NONBLOCK);
+            flags = fcntl(logger->sock, F_GETFL, 0);
             if (!(flags & O_NONBLOCK)) {
-                logger->err_ = "nonblock failure";
+                logger->err = "nonblock failure";
                 return -1;
             }
         }
         else if (proto == 1) {
             // LOG_TCP from FastSyslogger.pm
-            logger->sock_ = socket(AF_INET, SOCK_STREAM, 0);
+            logger->sock = socket(AF_INET, SOCK_STREAM, 0);
         }
     }
     else if (proto == 2) {
@@ -141,33 +141,33 @@ FastSyslogger_setReceiver(FastSyslogger* logger, int proto, char* hostname, int 
         address_len = sizeof(raddress);
 
         // construct socket
-        logger->sock_ = socket(AF_UNIX, SOCK_STREAM, 0);
+        logger->sock = socket(AF_UNIX, SOCK_STREAM, 0);
     }
     else {
-        logger->err_ = "bad protocol";
+        logger->err = "bad protocol";
         return -1;
     }
 
-    if (logger->sock_ < 0) {
-        logger->err_ = strerror(errno);
+    if (logger->sock < 0) {
+        logger->err = strerror(errno);
         return -1;
     }
 
     // close the socket after exec to match normal Perl behavior for sockets
-    fcntl(logger->sock_, F_SETFD, FD_CLOEXEC);
+    fcntl(logger->sock, F_SETFD, FD_CLOEXEC);
 
     // connect the socket
-    if (connect(logger->sock_, p_address, address_len) != 0) {
+    if (connect(logger->sock, p_address, address_len) != 0) {
         // some servers (rsyslog) may use SOCK_DGRAM for unix domain sockets
         if (proto == 2 && errno == EPROTOTYPE) {
-            logger->sock_ = socket(AF_UNIX, SOCK_DGRAM, 0);
-            if (connect(logger->sock_, p_address, address_len) != 0) {
-                logger->err_ = strerror(errno);
+            logger->sock = socket(AF_UNIX, SOCK_DGRAM, 0);
+            if (connect(logger->sock, p_address, address_len) != 0) {
+                logger->err = strerror(errno);
                 return -1;
             }
         }
         else {
-            logger->err_ = strerror(errno);
+            logger->err = strerror(errno);
             return -1;
         }
     }
@@ -176,18 +176,18 @@ FastSyslogger_setReceiver(FastSyslogger* logger, int proto, char* hostname, int 
 }
 
 int
-FastSyslogger_send(FastSyslogger* logger, char* msg, int len, time_t t)
+FSL_send(FastSyslogger* logger, char* msg, int len, time_t t)
 {
     // update the prefix if seconds have rolled over
-    if (t != logger->last_time_)
+    if (t != logger->last_time)
         update_prefix(logger, t);
 
     // paste the message into linebuf just past where the prefix was placed
-    int msg_len = len < LOG_BUFSIZE - logger->prefix_len_ ? len : LOG_BUFSIZE - logger->prefix_len_;
-    strncpy(logger->msg_start_, msg, msg_len);
+    int msg_len = len < LOG_BUFSIZE - logger->prefix_len ? len : LOG_BUFSIZE - logger->prefix_len;
+    strncpy(logger->msg_start, msg, msg_len);
 
-    int ret = send(logger->sock_, logger->linebuf_, logger->prefix_len_ + msg_len, MSG_DONTWAIT);
+    int ret = send(logger->sock, logger->linebuf, logger->prefix_len + msg_len, MSG_DONTWAIT);
     if (ret < 0)
-        logger->err_ = strerror(errno);
+        logger->err = strerror(errno);
     return ret;
 }

@@ -9,7 +9,7 @@ t/Log-Syslog-Fast.t
 t/Log-Syslog-Fast-Simple.t
 lib/Log/Syslog/Fast.pm
 lib/Log/Syslog/Fast/Simple.pm
-FastSyslogger.cpp
+FastSyslogger.c
 FastSyslogger.h
 META.yml                                 Module meta-data (added by MakeMaker)
 typemap
