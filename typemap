@@ -4,10 +4,12 @@ char *              STRINGMAYBEUNDEF
 
 OUTPUT
 FASTSYSLOGGER_REF
-                    // used to use "CLASS"
-                    sv_setref_pv( $arg, "Log::Syslog::Fast", (void*)$var );
+                    sv_setref_pv( $arg, "FastSyslogger", (void*)$var );
 STRINGMAYBEUNDEF
-                    warn(\"${Package}::$func_name() -- UNABLE TO RETURN CHAR *\");
+                    if ($var)
+                        $arg = newSVpv($var, 0);
+                    else
+                        warn(\"${Package}::$func_name() -- UNABLE TO RETURN CHAR *\");
 
 INPUT
 FASTSYSLOGGER_REF

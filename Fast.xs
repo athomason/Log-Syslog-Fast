@@ -15,81 +15,70 @@ INCLUDE: const-xs.inc
 PROTOTYPES: ENABLE
 
 FastSyslogger*
-FastSyslogger::new(proto, hostname, port, facility, severity, sender, name);
-    int proto
-    char* hostname
-    int port
-    int facility
-    int severity
-    char* sender
-    char* name
+FastSyslogger_alloc()
 CODE:
-    try {
-        RETVAL = new FastSyslogger(proto, hostname, port, facility, severity, sender, name);
-    }
-    catch (const char*& s) {
-        croak("Error in ->new: %s", s);
-    }
+    RETVAL = FastSyslogger_alloc();
     if (!RETVAL) XSRETURN_UNDEF;
 OUTPUT:
     RETVAL
-
-void
-FastSyslogger::DESTROY()
 
 int
-FastSyslogger::send(logmsg, now = time(0))
-    char* logmsg
-    time_t now
-ALIAS:
-    Log::Syslog::Fast::emit = 1
-CODE:
-    try {
-        RETVAL = THIS->send(logmsg, strlen(logmsg), now);
-    }
-    catch (const char*& s) {
-        croak("Error while sending: %s (%s)", s, strerror(errno));
-    }
-    if (!RETVAL) XSRETURN_UNDEF;
-OUTPUT:
-    RETVAL
-
-void
-FastSyslogger::setReceiver(proto, hostname, port)
+FastSyslogger_init(logger, proto, hostname, port, facility, severity, sender, name)
+    FastSyslogger* logger
     int proto
     char* hostname
     int port
-ALIAS:
-    Log::Syslog::Fast::set_receiver = 1
-CODE:
-    try {
-        THIS->setReceiver(proto, hostname, port);
-    }
-    catch (const char*& s) {
-        croak("Error in set_receiver: %s (%s)", s, strerror(errno));
-    }
-
-void
-FastSyslogger::setPriority(facility, severity)
     int facility
     int severity
-ALIAS:
-    Log::Syslog::Fast::set_priority = 1
-
-void
-FastSyslogger::setSender(sender)
     char* sender
-ALIAS:
-    Log::Syslog::Fast::set_sender = 1
-
-void
-FastSyslogger::setName(name)
     char* name
-ALIAS:
-    Log::Syslog::Fast::set_name = 1
 
 void
-FastSyslogger::setPid(pid)
+FastSyslogger_destroy(logger)
+    FastSyslogger* logger
+
+int
+FastSyslogger_send(logger, logmsg, now)
+    FastSyslogger* logger
+    char* logmsg
+    time_t now
+CODE:
+    RETVAL = FastSyslogger_send(logger, logmsg, strlen(logmsg), now);
+OUTPUT:
+    RETVAL
+
+int
+FastSyslogger_setReceiver(logger, proto, hostname, port)
+    FastSyslogger* logger
+    int proto
+    char* hostname
+    int port
+
+void
+FastSyslogger_setPriority(logger, facility, severity)
+    FastSyslogger* logger
+    int facility
+    int severity
+
+void
+FastSyslogger_setSender(logger, sender)
+    FastSyslogger* logger
+    char* sender
+
+void
+FastSyslogger_setName(logger, name)
+    FastSyslogger* logger
+    char* name
+
+void
+FastSyslogger_setPid(logger, pid)
+    FastSyslogger* logger
     int pid
-ALIAS:
-    Log::Syslog::Fast::set_pid = 1
+
+char*
+FastSyslogger_error(logger)
+    FastSyslogger* logger
+CODE:
+    RETVAL = logger->err_;
+OUTPUT:
+    RETVAL
