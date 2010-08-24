@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.37_C Mon Aug 23 18:13:37 PDT 2010
+        - Convert C++ objects to pure C functions; additional perl function
+          wrappers cause ~15% performance decreass
 0.37  Sun Aug 22 18:21:11 PDT 2010
         - BSDs appear to raise SIGPIPE on TCP close instead of failing sendto
           syscall, so expect either failure in test

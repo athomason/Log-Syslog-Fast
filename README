@@ -1,5 +1,5 @@
-Log-Syslog-Fast version 0.37
-============================
+Log-Syslog-Fast version 0.37C
+=============================
 
 This module sends syslog messages over a network socket. It works like
 Sys::Syslog in setlogsock's 'udp', 'tcp', or 'unix' modes, but without
