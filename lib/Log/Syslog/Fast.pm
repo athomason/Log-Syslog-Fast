@@ -207,6 +207,18 @@ L<Sys::Syslog>
 
 LOG_UNIX with SOCK_DGRAM has not been well tested.
 
+=head1 COMPILER COMPATIBILITY
+
+As the XS guts of this module are written in C++, additional compiler heartburn
+is likely with unusual setups. If it all possible, compile this package using
+the C compiler which produced your perl binary, and a matching C++ compiler.
+
+If that's just not possible, a version of the package whose XS only uses C
+exists as a git branch at
+L<http://github.com/athomason/Log-Syslog-Fast/tree/pure-c>. However, that
+branch is likely to become out of date, and has a small performance penalty
+versus the C++ version (~15%).
+
 =head1 AUTHOR
 
 Adam Thomason, E<lt>athomason@cpan.orgE<gt>
