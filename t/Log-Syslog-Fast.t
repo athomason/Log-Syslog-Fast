@@ -91,10 +91,11 @@ for my $p (sort keys %servers) {
         my $receiver = $server->accept;
         ok($receiver, "$p: accepted");
 
-        for my $config (['without time'], ['with time', time()]) {
+        my $time = time;
+        for my $config (['without time'], ['with time', $time]) {
             my ($msg, @extra) = @$config;
 
-            my $expected = expected_payload(@params, $$, $msg);
+            my $expected = expected_payload(@params, $$, $msg, $time);
 
             my $sent = eval { $logger->send($msg, @extra) };
             ok(!$@, "$p: ->send $msg doesn't throw");
@@ -144,7 +145,7 @@ for my $p (sort keys %servers) {
         my $receiver = $server->accept;
 
         my $msg = "testing 3";
-        my $expected = expected_payload(LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg);
+        my $expected = expected_payload(LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg, time);
 
         my $sent = eval { $logger->send($msg) };
         ok(!$@, "$p: ->send after accessors doesn't throw");
@@ -247,10 +248,10 @@ for my $p (sort keys %servers) {
 }
 
 sub expected_payload {
-    my ($facility, $severity, $sender, $name, $pid, $msg) = @_;
+    my ($facility, $severity, $sender, $name, $pid, $msg, $time) = @_;
     return sprintf "<%d>%s %s %s[%d]: %s",
         ($facility << 3) | $severity,
-        strftime("%h %e %T", localtime(time)),
+        strftime("%h %e %T", localtime($time)),
         $sender, $name, $pid, $msg;
 }
 
