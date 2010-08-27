@@ -4,7 +4,7 @@
 
 #include "ppport.h"
 
-#include "FastSyslogger.h"
+#include "LogSyslogFast.h"
 
 #include "const-c.inc"
 
@@ -14,8 +14,9 @@ INCLUDE: const-xs.inc
 
 PROTOTYPES: ENABLE
 
-FastSyslogger*
-FastSyslogger::new(proto, hostname, port, facility, severity, sender, name);
+LogSyslogFast*
+new(class, proto, hostname, port, facility, severity, sender, name)
+    char* class
     int proto
     char* hostname
     int port
@@ -24,72 +25,72 @@ FastSyslogger::new(proto, hostname, port, facility, severity, sender, name);
     char* sender
     char* name
 CODE:
-    try {
-        RETVAL = new FastSyslogger(proto, hostname, port, facility, severity, sender, name);
-    }
-    catch (const char*& s) {
-        croak("Error in ->new: %s", s);
-    }
-    if (!RETVAL) XSRETURN_UNDEF;
+    RETVAL = LSF_alloc();
+    if (!RETVAL)
+        croak("Error in ->new: malloc failed");
+    if (LSF_init(RETVAL, proto, hostname, port, facility, severity, sender, name) < 0)
+        croak("Error in ->new: %s", RETVAL->err);
 OUTPUT:
     RETVAL
 
 void
-FastSyslogger::DESTROY()
+DESTROY(logger)
+    LogSyslogFast* logger
+CODE:
+    LSF_destroy(logger);
 
 int
-FastSyslogger::send(logmsg, now = time(0))
+send(logger, logmsg, now = time(0))
+    LogSyslogFast* logger
     char* logmsg
     time_t now
 ALIAS:
-    Log::Syslog::Fast::emit = 1
+    emit = 1
 CODE:
-    try {
-        RETVAL = THIS->send(logmsg, strlen(logmsg), now);
-    }
-    catch (const char*& s) {
-        croak("Error while sending: %s (%s)", s, strerror(errno));
-    }
-    if (!RETVAL) XSRETURN_UNDEF;
+    RETVAL = LSF_send(logger, logmsg, strlen(logmsg), now);
+    if (RETVAL < 0)
+        croak("Error while sending: %s", logger->err);
+OUTPUT:
+    RETVAL
+
+int
+set_receiver(logger, proto, hostname, port)
+    LogSyslogFast* logger
+    int proto
+    char* hostname
+    int port
+CODE:
+    RETVAL = LSF_set_receiver(logger, proto, hostname, port);
+    if (RETVAL < 0)
+        croak("Error in set_receiver: %s", logger->err);
 OUTPUT:
     RETVAL
 
 void
-FastSyslogger::setReceiver(proto, hostname, port)
-    int proto
-    char* hostname
-    int port
-ALIAS:
-    Log::Syslog::Fast::set_receiver = 1
-CODE:
-    try {
-        THIS->setReceiver(proto, hostname, port);
-    }
-    catch (const char*& s) {
-        croak("Error in set_receiver: %s (%s)", s, strerror(errno));
-    }
-
-void
-FastSyslogger::setPriority(facility, severity)
+set_priority(logger, facility, severity)
+    LogSyslogFast* logger
     int facility
     int severity
-ALIAS:
-    Log::Syslog::Fast::set_priority = 1
+CODE:
+    LSF_set_priority(logger, facility, severity);
 
 void
-FastSyslogger::setSender(sender)
+set_sender(logger, sender)
+    LogSyslogFast* logger
     char* sender
-ALIAS:
-    Log::Syslog::Fast::set_sender = 1
+CODE:
+    LSF_set_sender(logger, sender);
 
 void
-FastSyslogger::setName(name)
+set_name(logger, name)
+    LogSyslogFast* logger
     char* name
-ALIAS:
-    Log::Syslog::Fast::set_name = 1
+CODE:
+    LSF_set_name(logger, name);
 
 void
-FastSyslogger::setPid(pid)
+set_pid(logger, pid)
+    LogSyslogFast* logger
     int pid
-ALIAS:
-    Log::Syslog::Fast::set_pid = 1
+CODE:
+    LSF_set_pid(logger, pid);

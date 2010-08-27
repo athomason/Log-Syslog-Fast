@@ -1,13 +1,15 @@
 TYPEMAP
-FastSyslogger *     FASTSYSLOGGER_REF
+LogSyslogFast *     FASTSYSLOGGER_REF
 char *              STRINGMAYBEUNDEF
 
 OUTPUT
 FASTSYSLOGGER_REF
-                    // used to use "CLASS"
                     sv_setref_pv( $arg, "Log::Syslog::Fast", (void*)$var );
 STRINGMAYBEUNDEF
-                    warn(\"${Package}::$func_name() -- UNABLE TO RETURN CHAR *\");
+                    if ($var)
+                        $arg = newSVpv($var, 0);
+                    else
+                        warn(\"${Package}::$func_name() -- UNABLE TO RETURN CHAR *\");
 
 INPUT
 FASTSYSLOGGER_REF

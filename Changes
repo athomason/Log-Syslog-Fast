@@ -1,4 +1,12 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.40   Thu Aug 26 17:31:13 PDT 2010
+        - Eliminate performance penalty of C version by removing perl shim
+          layer
+        - Rename some things in C space
+0.37_C Mon Aug 23 18:13:37 PDT 2010
+        - Convert C++ objects to pure C functions; additional perl function
+          wrappers cause ~15% performance decrease (this should help with all
+          the failures on BSD platforms)
 0.37  Sun Aug 22 18:21:11 PDT 2010
         - BSDs appear to raise SIGPIPE on TCP close instead of failing sendto
           syscall, so expect either failure in test
