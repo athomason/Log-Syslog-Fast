@@ -12,7 +12,7 @@ WriteMakefile(
        AUTHOR         => 'Adam Thomason <athomason@sixapart.com>') : ()),
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
     INC               => '-I.', # e.g., '-I. -I/usr/include/other'
-    OBJECT            => 'FastSyslogger.o Fast.o', # link all the C files too
+    OBJECT            => 'LogSyslogFast.o Fast.o', # link all the C files too
     CCFLAGS           => '-g',
 );
 if  (eval {require ExtUtils::Constant; 1}) {

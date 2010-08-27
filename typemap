@@ -1,10 +1,10 @@
 TYPEMAP
-FastSyslogger *     FASTSYSLOGGER_REF
+LogSyslogFast *     FASTSYSLOGGER_REF
 char *              STRINGMAYBEUNDEF
 
 OUTPUT
 FASTSYSLOGGER_REF
-                    sv_setref_pv( $arg, "FastSyslogger", (void*)$var );
+                    sv_setref_pv( $arg, "Log::Syslog::Fast", (void*)$var );
 STRINGMAYBEUNDEF
                     if ($var)
                         $arg = newSVpv($var, 0);

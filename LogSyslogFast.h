@@ -1,5 +1,5 @@
-#ifndef __FASTSYSLOG_H__
-#define __FASTSYSLOG_H__
+#ifndef __LOGSYSLOGFAST_H__
+#define __LOGSYSLOGFAST_H__
 
 #include <time.h>
 
@@ -25,18 +25,18 @@ typedef struct {
     // error reporting
     char*  err;                     // error string
 
-} FastSyslogger;
+} LogSyslogFast;
 
-FastSyslogger* FSL_alloc();
-int FSL_init(FastSyslogger* logger, int proto, char* hostname, int port, int facility, int severity, char* sender, char* name);
-int FSL_destroy(FastSyslogger* logger);
+LogSyslogFast* LSF_alloc();
+int LSF_init(LogSyslogFast* logger, int proto, char* hostname, int port, int facility, int severity, char* sender, char* name);
+int LSF_destroy(LogSyslogFast* logger);
 
-int FSL_set_receiver(FastSyslogger* logger, int proto, char* hostname, int port);
-void FSL_set_priority(FastSyslogger* logger, int facility, int severity);
-void FSL_set_sender(FastSyslogger* logger, char* sender);
-void FSL_set_name(FastSyslogger* logger, char* name);
-void FSL_set_pid(FastSyslogger* logger, int pid);
+int LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port);
+void LSF_set_priority(LogSyslogFast* logger, int facility, int severity);
+void LSF_set_sender(LogSyslogFast* logger, char* sender);
+void LSF_set_name(LogSyslogFast* logger, char* name);
+void LSF_set_pid(LogSyslogFast* logger, int pid);
 
-int FSL_send(FastSyslogger* logger, char* msg, int len, time_t t);
+int LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t);
 
 #endif

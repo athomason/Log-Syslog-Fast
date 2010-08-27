@@ -1,4 +1,4 @@
-#include "FastSyslogger.h"
+#include "LogSyslogFast.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -14,7 +14,7 @@
 
 static
 void
-update_prefix(FastSyslogger* logger, time_t t)
+update_prefix(LogSyslogFast* logger, time_t t)
 {
     logger->last_time = t;
 
@@ -30,14 +30,14 @@ update_prefix(FastSyslogger* logger, time_t t)
     logger->msg_start = logger->linebuf + logger->prefix_len;
 }
 
-FastSyslogger*
-FSL_alloc()
+LogSyslogFast*
+LSF_alloc()
 {
-    return malloc(sizeof(FastSyslogger));
+    return malloc(sizeof(LogSyslogFast));
 }
 
-FSL_init(
-    FastSyslogger* logger, int proto, char* hostname, int port,
+LSF_init(
+    LogSyslogFast* logger, int proto, char* hostname, int port,
     int facility, int severity, char* sender, char* name)
 {
     if (!logger)
@@ -49,11 +49,11 @@ FSL_init(
     logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));
 
-    return FSL_set_receiver(logger, proto, hostname, port);
+    return LSF_set_receiver(logger, proto, hostname, port);
 }
 
 int
-FSL_destroy(FastSyslogger* logger)
+LSF_destroy(LogSyslogFast* logger)
 {
     int ret = close(logger->sock);
     free(logger);
@@ -61,35 +61,35 @@ FSL_destroy(FastSyslogger* logger)
 }
 
 void
-FSL_set_priority(FastSyslogger* logger, int facility, int severity)
+LSF_set_priority(LogSyslogFast* logger, int facility, int severity)
 {
     logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));
 }
 
 void
-FSL_set_sender(FastSyslogger* logger, char* sender)
+LSF_set_sender(LogSyslogFast* logger, char* sender)
 {
     strncpy(logger->sender, sender, sizeof(logger->sender) - 1);
     update_prefix(logger, time(0));
 }
 
 void
-FSL_set_name(FastSyslogger* logger, char* name)
+LSF_set_name(LogSyslogFast* logger, char* name)
 {
     strncpy(logger->name, name, sizeof(logger->name) - 1);
     update_prefix(logger, time(0));
 }
 
 void
-FSL_set_pid(FastSyslogger* logger, int pid)
+LSF_set_pid(LogSyslogFast* logger, int pid)
 {
     logger->pid = pid;
     update_prefix(logger, time(0));
 }
 
 int
-FSL_set_receiver(FastSyslogger* logger, int proto, char* hostname, int port)
+LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
 {
     const struct sockaddr* p_address;
     int address_len;
@@ -113,7 +113,7 @@ FSL_set_receiver(FastSyslogger* logger, int proto, char* hostname, int port)
 
         // construct socket
         if (proto == 0) {
-            // LOG_UDP from FastSyslogger.pm
+            // LOG_UDP from LogSyslogFast.pm
             logger->sock = socket(AF_INET, SOCK_DGRAM, 0);
 
             // make the socket non-blocking
@@ -126,12 +126,12 @@ FSL_set_receiver(FastSyslogger* logger, int proto, char* hostname, int port)
             }
         }
         else if (proto == 1) {
-            // LOG_TCP from FastSyslogger.pm
+            // LOG_TCP from LogSyslogFast.pm
             logger->sock = socket(AF_INET, SOCK_STREAM, 0);
         }
     }
     else if (proto == 2) {
-        // LOG_UNIX from FastSyslogger.pm
+        // LOG_UNIX from LogSyslogFast.pm
 
         // create the log device's address
         struct sockaddr_un raddress;
@@ -176,7 +176,7 @@ FSL_set_receiver(FastSyslogger* logger, int proto, char* hostname, int port)
 }
 
 int
-FSL_send(FastSyslogger* logger, char* msg, int len, time_t t)
+LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
 {
     // update the prefix if seconds have rolled over
     if (t != logger->last_time)
