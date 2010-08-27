@@ -7,23 +7,23 @@
 
 typedef struct {
 
-    // configuration
-    int    priority;                // RFC3164/4.1.1 PRI Part
-    char   sender[LOG_BUFSIZE];     // sender hostname
-    char   name[LOG_BUFSIZE];       // sending program name
-    int    pid;                     // sending program pid
+    /* configuration */
+    int    priority;                /* RFC3164/4.1.1 PRI Part */
+    char   sender[LOG_BUFSIZE];     /* sender hostname */
+    char   name[LOG_BUFSIZE];       /* sending program name */
+    int    pid;                     /* sending program pid */
 
-    // resource handles
-    int    sock;                    // socket fd
+    /* resource handles */
+    int    sock;                    /* socket fd */
 
-    // internal state
-    time_t last_time;               // time when the prefix was last generated
-    char   linebuf[LOG_BUFSIZE];    // log line, including prefix and message
-    size_t prefix_len;              // length of the prefix string
-    char*  msg_start;               // pointer into linebuf_ after end of prefix
+    /* internal state */
+    time_t last_time;               /* time when the prefix was last generated */
+    char   linebuf[LOG_BUFSIZE];    /* log line, including prefix and message */
+    size_t prefix_len;              /* length of the prefix string */
+    char*  msg_start;               /* pointer into linebuf_ after end of prefix */
 
-    // error reporting
-    char*  err;                     // error string
+    /* error reporting */
+    char*  err;                     /* error string */
 
 } LogSyslogFast;
 

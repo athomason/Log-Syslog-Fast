@@ -27,7 +27,7 @@ update_prefix(LogSyslogFast* logger, time_t t)
         logger->priority, timestr, logger->sender, logger->name, logger->pid
     );
 
-    // cache the location in linebuf where msg should be pasted in
+    /* cache the location in linebuf where msg should be pasted in */
     logger->msg_start = logger->linebuf + logger->prefix_len;
 }
 
@@ -37,6 +37,7 @@ LSF_alloc()
     return malloc(sizeof(LogSyslogFast));
 }
 
+int
 LSF_init(
     LogSyslogFast* logger, int proto, char* hostname, int port,
     int facility, int severity, char* sender, char* name)
@@ -95,16 +96,16 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
     const struct sockaddr* p_address;
     int address_len;
 
-    // set up a socket, letting kernel assign local port
+    /* set up a socket, letting kernel assign local port */
     if (proto == 0 || proto == 1) {
-        // resolve the remote host
+        /* resolve the remote host */
         struct hostent* host = gethostbyname(hostname);
         if (!host || !host->h_addr_list || !host->h_addr_list[0]) {
             logger->err = "resolve failure";
             return -1;
         }
 
-        // create the remote host's address
+        /* create the remote host's address */
         struct sockaddr_in raddress;
         raddress.sin_family = AF_INET;
         memcpy(&raddress.sin_addr, host->h_addr_list[0], sizeof(raddress.sin_addr));
@@ -112,12 +113,12 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
         p_address = (const struct sockaddr*) &raddress;
         address_len = sizeof(raddress);
 
-        // construct socket
+        /* construct socket */
         if (proto == 0) {
-            // LOG_UDP from LogSyslogFast.pm
+            /* LOG_UDP from LogSyslogFast.pm */
             logger->sock = socket(AF_INET, SOCK_DGRAM, 0);
 
-            // make the socket non-blocking
+            /* make the socket non-blocking */
             int flags = fcntl(logger->sock, F_GETFL, 0);
             fcntl(logger->sock, F_SETFL, flags | O_NONBLOCK);
             flags = fcntl(logger->sock, F_GETFL, 0);
@@ -127,21 +128,21 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
             }
         }
         else if (proto == 1) {
-            // LOG_TCP from LogSyslogFast.pm
+            /* LOG_TCP from LogSyslogFast.pm */
             logger->sock = socket(AF_INET, SOCK_STREAM, 0);
         }
     }
     else if (proto == 2) {
-        // LOG_UNIX from LogSyslogFast.pm
+        /* LOG_UNIX from LogSyslogFast.pm */
 
-        // create the log device's address
+        /* create the log device's address */
         struct sockaddr_un raddress;
         raddress.sun_family = AF_UNIX;
         strcpy(raddress.sun_path, hostname);
         p_address = (const struct sockaddr*) &raddress;
         address_len = sizeof(raddress);
 
-        // construct socket
+        /* construct socket */
         logger->sock = socket(AF_UNIX, SOCK_STREAM, 0);
     }
     else {
@@ -154,12 +155,12 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
         return -1;
     }
 
-    // close the socket after exec to match normal Perl behavior for sockets
+    /* close the socket after exec to match normal Perl behavior for sockets */
     fcntl(logger->sock, F_SETFD, FD_CLOEXEC);
 
-    // connect the socket
+    /* connect the socket */
     if (connect(logger->sock, p_address, address_len) != 0) {
-        // some servers (rsyslog) may use SOCK_DGRAM for unix domain sockets
+        /* some servers (rsyslog) may use SOCK_DGRAM for unix domain sockets */
         if (proto == 2 && errno == EPROTOTYPE) {
             logger->sock = socket(AF_UNIX, SOCK_DGRAM, 0);
             if (connect(logger->sock, p_address, address_len) != 0) {
@@ -179,11 +180,11 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
 int
 LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
 {
-    // update the prefix if seconds have rolled over
+    /* update the prefix if seconds have rolled over */
     if (t != logger->last_time)
         update_prefix(logger, t);
 
-    // paste the message into linebuf just past where the prefix was placed
+    /* paste the message into linebuf just past where the prefix was placed */
     int msg_len = len < LOG_BUFSIZE - logger->prefix_len ? len : LOG_BUFSIZE - logger->prefix_len;
     strncpy(logger->msg_start, msg, msg_len);
 
