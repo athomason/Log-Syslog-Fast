@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.41   Fri Aug 27 16:55:37 PDT 2010
+        - Make pedantic C compilers happier
+        - Fix timing race in test
 0.40   Thu Aug 26 17:31:13 PDT 2010
         - Eliminate performance penalty of C version by removing perl shim
           layer
