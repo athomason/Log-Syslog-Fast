@@ -14,3 +14,5 @@ LogSyslogFast.h
 META.yml                                 Module meta-data (added by MakeMaker)
 typemap
 Log-Syslog-Fast.spec
+fallback/const-c.inc
+fallback/const-xs.inc
