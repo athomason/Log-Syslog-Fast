@@ -1,22 +1,20 @@
 package Log::Syslog::Fast;
 
-use 5.008005;
+use 5.006002;
 use strict;
 use warnings;
 
 require Exporter;
 use Log::Syslog::Constants ();
 
-our $VERSION = '0.41';
+our $VERSION = '0.42';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
-use constant {
-    # protocols
-    LOG_UDP         => 0, # UDP
-    LOG_TCP         => 1, # TCP
-    LOG_UNIX        => 2, # UNIX socket
-};
+# protocols
+use constant LOG_UDP    => 0; # UDP
+use constant LOG_TCP    => 1; # TCP
+use constant LOG_UNIX   => 2; # UNIX socket
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],

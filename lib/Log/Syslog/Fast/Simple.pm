@@ -14,18 +14,16 @@ our %EXPORT_TAGS = %Log::Syslog::Fast::EXPORT_TAGS;
 our @EXPORT_OK   = @Log::Syslog::Fast::EXPORT_OK;
 our @EXPORT      = qw();
 
-use constant {
-    _LOGGERS    => 0,
-    _ARGS       => 1,
+use constant _LOGGERS   => 0;
+use constant _ARGS      => 1;
 
-    _PROTO      => 0,
-    _HOSTNAME   => 1,
-    _PORT       => 2,
-    _FACILITY   => 3,
-    _SEVERITY   => 4,
-    _SENDER     => 5,
-    _NAME       => 6,
-};
+use constant _PROTO     => 0;
+use constant _HOSTNAME  => 1;
+use constant _PORT      => 2;
+use constant _FACILITY  => 3;
+use constant _SEVERITY  => 4;
+use constant _SENDER    => 5;
+use constant _NAME      => 6;
 
 sub new {
     my $what = shift;

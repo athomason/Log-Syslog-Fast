@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.42   Fri Aug 27 17:44:04 PDT 2010
+        - Support perl 5.6.2
 0.41   Fri Aug 27 16:55:37 PDT 2010
         - Make pedantic C compilers happier
         - Fix timing race in test

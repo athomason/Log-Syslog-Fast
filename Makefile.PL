@@ -1,17 +1,16 @@
-use 5.008005;
+use 5.006002;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME              => 'Log::Syslog::Fast',
     VERSION_FROM      => 'lib/Log/Syslog/Fast.pm', # finds $VERSION
     PREREQ_PM         => {
-        'Log::Syslog::Constants'    => 1.00,
+        'Log::Syslog::Constants'    => 1.01,
     },
-    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/Log/Syslog/Fast.pm', # retrieve abstract from module
-       AUTHOR         => 'Adam Thomason <athomason@sixapart.com>') : ()),
-    DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => '-I.', # e.g., '-I. -I/usr/include/other'
+    ABSTRACT_FROM     => 'lib/Log/Syslog/Fast.pm',
+    AUTHOR            => 'Adam Thomason <athomason@cpan.org>',
+    DEFINE            => '',
+    INC               => '-I.',
     OBJECT            => 'LogSyslogFast.o Fast.o', # link all the C files too
     CCFLAGS           => '-g',
 );

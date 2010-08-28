@@ -13,13 +13,21 @@ BEGIN { use_ok('Log::Syslog::Fast', ':protos') };
 
 my $test_dir = tempdir(CLEANUP => 1);
 
+# old IO::Socket::INET fails with "Bad service '0'" when attempting to use
+# wildcard port
+my $port = 24767;
+sub listen_port {
+    return 0 if $IO::Socket::INET::VERSION >= 1.31;
+    return $port++;
+}
+
 my %servers = (
     tcp => sub {
         my $listener = IO::Socket::INET->new(
             Proto       => 'tcp',
             Type        => SOCK_STREAM,
             LocalHost   => 'localhost',
-            LocalPort   => 0,
+            LocalPort   => listen_port(),
             Listen      => 5,
         ) or die $!;
         return StreamServer->new(
@@ -33,7 +41,7 @@ my %servers = (
             Proto       => 'udp',
             Type        => SOCK_DGRAM,
             LocalHost   => 'localhost',
-            LocalPort   => 0,
+            LocalPort   => listen_port(),
         ) or die $!;
         return DgramServer->new(
             listener    => $listener,
