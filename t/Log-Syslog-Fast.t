@@ -103,7 +103,8 @@ for my $p (sort keys %servers) {
         for my $config (['without time'], ['with time', $time]) {
             my ($msg, @extra) = @$config;
 
-            my $expected = expected_payload(@params, $$, $msg, $time);
+            my @payload_params = (@params, $$, $msg, $time);
+            my $expected = expected_payload(@payload_params);
 
             my $sent = eval { $logger->send($msg, @extra) };
             ok(!$@, "$p: ->send $msg doesn't throw");
@@ -117,7 +118,7 @@ for my $p (sort keys %servers) {
 
                 ok($buf =~ /^<38>/, "$p: ->send $msg has the right priority");
                 ok($buf =~ /$msg$/, "$p: ->send $msg has the right message");
-                is($buf, $expected, "$p: ->send $msg has correct payload");
+                ok(payload_ok($buf, @payload_params), "$p: ->send $msg has correct payload");
             }
         }
     };
@@ -153,7 +154,8 @@ for my $p (sort keys %servers) {
         my $receiver = $server->accept;
 
         my $msg = "testing 3";
-        my $expected = expected_payload(LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg, time);
+        my @payload_params = (LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg, time);
+        my $expected = expected_payload(@payload_params);
 
         my $sent = eval { $logger->send($msg) };
         ok(!$@, "$p: ->send after accessors doesn't throw");
@@ -170,7 +172,7 @@ for my $p (sort keys %servers) {
             ok($buf =~ /test2\[/, "$p: ->send after set_name has the right name");
             ok($buf =~ /\[12345\]/, "$p: ->send after set_name has the right pid");
             ok($buf =~ /$msg$/, "$p: ->send after accessors sends right message");
-            is($buf, $expected, "$p: ->send after accessors has right payload");
+            ok(payload_ok($buf, @payload_params), "$p: ->send $msg has correct payload");
         }
     };
     diag($@) if $@;
@@ -261,6 +263,21 @@ sub expected_payload {
         ($facility << 3) | $severity,
         strftime("%h %e %T", localtime($time)),
         $sender, $name, $pid, $msg;
+}
+
+sub payload_ok {
+    my ($payload, @payload_params) = @_;
+    for my $offset (0, -1, 1) {
+        my $allowed = expected_payload(@payload_params);
+        return 1 if $allowed eq $payload;
+    }
+    return 0;
+}
+
+sub allowed_payloads {
+    my @params = @_;
+    my $time = pop @params;
+    return map { expected_payload(@params, $time + $_) } (-1, 0, 1);
 }
 
 # use select so test won't block on failure
