@@ -59,6 +59,8 @@ set_receiver(logger, proto, hostname, port)
     int proto
     char* hostname
     int port
+ALIAS:
+    setReceiver = 1
 CODE:
     int ret = LSF_set_receiver(logger, proto, hostname, port);
     if (ret < 0)
@@ -69,6 +71,8 @@ set_priority(logger, facility, severity)
     LogSyslogFast* logger
     int facility
     int severity
+ALIAS:
+    setPriority = 1
 CODE:
     LSF_set_priority(logger, facility, severity);
 
@@ -76,6 +80,8 @@ void
 set_sender(logger, sender)
     LogSyslogFast* logger
     char* sender
+ALIAS:
+    setSender = 1
 CODE:
     LSF_set_sender(logger, sender);
 
@@ -83,6 +89,8 @@ void
 set_name(logger, name)
     LogSyslogFast* logger
     char* name
+ALIAS:
+    setName = 1
 CODE:
     LSF_set_name(logger, name);
 
@@ -90,5 +98,7 @@ void
 set_pid(logger, pid)
     LogSyslogFast* logger
     int pid
+ALIAS:
+    setPid = 1
 CODE:
     LSF_set_pid(logger, pid);

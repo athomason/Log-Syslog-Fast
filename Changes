@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.44   Tue Aug 31 04:16:34 PDT 2010
+        - Restore legacy aliases
         - Guard against and test for obscure buffer overflows
         - Prevent buffer overflow from big unix filename
 0.43   Sun Aug 29 16:42:02 PDT 2010
