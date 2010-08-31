@@ -138,7 +138,7 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
         /* create the log device's address */
         struct sockaddr_un raddress;
         raddress.sun_family = AF_UNIX;
-        strcpy(raddress.sun_path, hostname);
+        strncpy(raddress.sun_path, hostname, sizeof(raddress.sun_path));
         p_address = (const struct sockaddr*) &raddress;
         address_len = sizeof(raddress);
 
