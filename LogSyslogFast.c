@@ -26,6 +26,8 @@ update_prefix(LogSyslogFast* logger, time_t t)
         "<%d>%s %s %s[%d]: ",
         logger->priority, timestr, logger->sender, logger->name, logger->pid
     );
+    if (logger->prefix_len > LOG_BUFSIZE - 1)
+        logger->prefix_len = LOG_BUFSIZE - 1;
 
     /* cache the location in linebuf where msg should be pasted in */
     logger->msg_start = logger->linebuf + logger->prefix_len;
@@ -46,8 +48,10 @@ LSF_init(
         return -1;
 
     logger->pid = getpid();
-    strncpy(logger->sender, sender, sizeof(logger->sender) - 1);
-    strncpy(logger->name, name, sizeof(logger->name) - 1);
+
+    LSF_set_sender(logger, sender);
+    LSF_set_name(logger, name);
+
     logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));
 
@@ -72,6 +76,7 @@ LSF_set_priority(LogSyslogFast* logger, int facility, int severity)
 void
 LSF_set_sender(LogSyslogFast* logger, char* sender)
 {
+    memset(logger->sender, '\0', sizeof(logger->sender));
     strncpy(logger->sender, sender, sizeof(logger->sender) - 1);
     update_prefix(logger, time(0));
 }
@@ -79,6 +84,7 @@ LSF_set_sender(LogSyslogFast* logger, char* sender)
 void
 LSF_set_name(LogSyslogFast* logger, char* name)
 {
+    memset(logger->name, '\0', sizeof(logger->name));
     strncpy(logger->name, name, sizeof(logger->name) - 1);
     update_prefix(logger, time(0));
 }
@@ -138,7 +144,7 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
         /* create the log device's address */
         struct sockaddr_un raddress;
         raddress.sun_family = AF_UNIX;
-        strncpy(raddress.sun_path, hostname, sizeof(raddress.sun_path));
+        strncpy(raddress.sun_path, hostname, sizeof(raddress.sun_path) - 1);
         p_address = (const struct sockaddr*) &raddress;
         address_len = sizeof(raddress);
 
@@ -187,6 +193,7 @@ LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
     /* paste the message into linebuf just past where the prefix was placed */
     int msg_len = len < LOG_BUFSIZE - logger->prefix_len ? len : LOG_BUFSIZE - logger->prefix_len;
     strncpy(logger->msg_start, msg, msg_len);
+    *(logger->msg_start + msg_len) = '\0';
 
     int ret = send(logger->sock, logger->linebuf, logger->prefix_len + msg_len, MSG_DONTWAIT);
     if (ret < 0)
