@@ -53,18 +53,16 @@ CODE:
 OUTPUT:
     RETVAL
 
-int
+void
 set_receiver(logger, proto, hostname, port)
     LogSyslogFast* logger
     int proto
     char* hostname
     int port
 CODE:
-    RETVAL = LSF_set_receiver(logger, proto, hostname, port);
-    if (RETVAL < 0)
+    int ret = LSF_set_receiver(logger, proto, hostname, port);
+    if (ret < 0)
         croak("Error in set_receiver: %s", logger->err);
-OUTPUT:
-    RETVAL
 
 void
 set_priority(logger, facility, severity)
