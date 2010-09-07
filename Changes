@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.45   Mon Sep  6 19:12:59 PDT 2010
+        - Report old IO::Socket::INET versions
 0.44   Tue Aug 31 04:16:34 PDT 2010
         - Restore legacy aliases
         - Guard against and test for obscure buffer overflows

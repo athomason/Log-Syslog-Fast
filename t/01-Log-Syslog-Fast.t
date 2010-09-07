@@ -18,6 +18,7 @@ my $test_dir = tempdir(CLEANUP => 1);
 my $port = 24767;
 sub listen_port {
     return 0 if $IO::Socket::INET::VERSION >= 1.31;
+    diag("Using port $port for IO::Socket::INET v$IO::Socket::INET::VERSION");
     return $port++;
 }
 
@@ -29,6 +30,7 @@ my %servers = (
             LocalHost   => 'localhost',
             LocalPort   => listen_port(),
             Listen      => 5,
+            Reuse       => 1,
         ) or die $!;
         return StreamServer->new(
             listener    => $listener,
@@ -42,6 +44,7 @@ my %servers = (
             Type        => SOCK_DGRAM,
             LocalHost   => 'localhost',
             LocalPort   => listen_port(),
+            Reuse       => 1,
         ) or die $!;
         return DgramServer->new(
             listener    => $listener,
