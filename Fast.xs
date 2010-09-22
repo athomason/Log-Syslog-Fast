@@ -37,7 +37,8 @@ void
 DESTROY(logger)
     LogSyslogFast* logger
 CODE:
-    LSF_destroy(logger);
+    if (LSF_destroy(logger))
+        croak("Error in close: %s", logger->err);
 
 int
 send(logger, logmsg, now = time(0))

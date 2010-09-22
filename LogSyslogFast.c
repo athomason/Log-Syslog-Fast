@@ -10,7 +10,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
-#include <time.h>
 #include <unistd.h>
 
 static
@@ -62,6 +61,8 @@ int
 LSF_destroy(LogSyslogFast* logger)
 {
     int ret = close(logger->sock);
+    if (ret)
+        logger->err = strerror(errno);
     free(logger);
     return ret;
 }
