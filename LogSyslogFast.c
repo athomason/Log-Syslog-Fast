@@ -196,7 +196,7 @@ LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
     strncpy(logger->msg_start, msg, msg_len);
     *(logger->msg_start + msg_len) = '\0';
 
-    int ret = send(logger->sock, logger->linebuf, logger->prefix_len + msg_len, MSG_DONTWAIT);
+    int ret = send(logger->sock, logger->linebuf, logger->prefix_len + msg_len, 0);
     if (ret < 0)
         logger->err = strerror(errno);
     return ret;

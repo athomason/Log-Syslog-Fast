@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.46   Tue Nov 16 19:52:24 PST 2010
+        - Remove MSG_DONTWAIT from send parameters since appropriate sockets
+          (UDP) are already marked non-blocking (thanks POWERMAN@)
         - Add note about thrown exceptions in send
         - croak on close(2) failure
 0.45   Mon Sep  6 19:12:59 PDT 2010
