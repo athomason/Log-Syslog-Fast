@@ -1,4 +1,5 @@
 Revision history for Perl extension Log::Syslog::Fast.
+        - Add note about thrown exceptions in send
         - croak on close(2) failure
 0.45   Mon Sep  6 19:12:59 PDT 2010
         - Report old IO::Socket::INET versions

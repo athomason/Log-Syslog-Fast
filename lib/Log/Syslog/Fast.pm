@@ -78,7 +78,7 @@ The transport protocol: one of LOG_TCP, LOG_UDP, or LOG_UNIX.
 If LOG_TCP or LOG_UNIX is used, calls to $logger-E<gt>send() will block until
 remote receipt of the message is confirmed. If LOG_UDP is used, the call will
 never block and may fail if insufficient buffer space exists in the network
-stack.
+stack (in which case an exception will be thrown).
 
 With LOG_UNIX, I<< ->new >> will first attempt to connect with a SOCK_STREAM
 socket, and then try a SOCK_DGRAM if that is what the server expects (e.g.
@@ -125,6 +125,12 @@ The program name or tag to use for the message.
 Send a syslog message through the configured logger. If $time is not provided,
 CORE::time() will be called for you. That doubles the syscalls per message, so
 try to pass it if you're already calling time() yourself.
+
+->send may throw an exception if the system call fails (e.g. the transport
+becomes disconnected for connected protocols, or the kernel buffer is full for
+unconnected). For this reason it is usually wise to wrap calls with an
+exception handler. Likewise, calling ->send from a $SIG{__DIE__} handler is
+unwise.
 
 B<emit> is an alias for B<send>.
 
