@@ -8,6 +8,7 @@ Fast.xs
 t/01-Log-Syslog-Fast.t
 t/02-Log-Syslog-Fast-Simple.t
 t/03-corner-cases.t
+t/04-accessors.t
 lib/Log/Syslog/Fast.pm
 lib/Log/Syslog/Fast/Simple.pm
 LogSyslogFast.c

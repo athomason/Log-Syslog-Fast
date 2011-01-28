@@ -32,10 +32,20 @@ int LSF_init(LogSyslogFast* logger, int proto, char* hostname, int port, int fac
 int LSF_destroy(LogSyslogFast* logger);
 
 int LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port);
+
 void LSF_set_priority(LogSyslogFast* logger, int facility, int severity);
+void LSF_set_facility(LogSyslogFast* logger, int facility);
+void LSF_set_severity(LogSyslogFast* logger, int severity);
 void LSF_set_sender(LogSyslogFast* logger, char* sender);
 void LSF_set_name(LogSyslogFast* logger, char* name);
 void LSF_set_pid(LogSyslogFast* logger, int pid);
+
+int LSF_get_priority(LogSyslogFast* logger);
+int LSF_get_facility(LogSyslogFast* logger);
+int LSF_get_severity(LogSyslogFast* logger);
+char* LSF_get_sender(LogSyslogFast* logger);
+char* LSF_get_name(LogSyslogFast* logger);
+int LSF_get_pid(LogSyslogFast* logger);
 
 int LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t);
 

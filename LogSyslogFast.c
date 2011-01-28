@@ -75,6 +75,18 @@ LSF_set_priority(LogSyslogFast* logger, int facility, int severity)
 }
 
 void
+LSF_set_facility(LogSyslogFast* logger, int facility)
+{
+    LSF_set_priority(logger, facility, LSF_get_severity(logger));
+}
+
+void
+LSF_set_severity(LogSyslogFast* logger, int severity)
+{
+    LSF_set_priority(logger, LSF_get_facility(logger), severity);
+}
+
+void
 LSF_set_sender(LogSyslogFast* logger, char* sender)
 {
     memset(logger->sender, '\0', sizeof(logger->sender));
@@ -200,4 +212,40 @@ LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
     if (ret < 0)
         logger->err = strerror(errno);
     return ret;
+}
+
+int
+LSF_get_priority(LogSyslogFast* logger)
+{
+    return logger->priority;
+}
+
+int
+LSF_get_facility(LogSyslogFast* logger)
+{
+    return logger->priority >> 3;
+}
+
+int
+LSF_get_severity(LogSyslogFast* logger)
+{
+    return logger->priority & 7;
+}
+
+char*
+LSF_get_sender(LogSyslogFast* logger)
+{
+    return logger->sender;
+}
+
+char*
+LSF_get_name(LogSyslogFast* logger)
+{
+    return logger->name;
+}
+
+int
+LSF_get_pid(LogSyslogFast* logger)
+{
+    return logger->pid;
 }

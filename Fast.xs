@@ -78,6 +78,20 @@ CODE:
     LSF_set_priority(logger, facility, severity);
 
 void
+set_facility(logger, facility)
+    LogSyslogFast* logger
+    int facility
+CODE:
+    LSF_set_facility(logger, facility);
+
+void
+set_severity(logger, severity)
+    LogSyslogFast* logger
+    int severity
+CODE:
+    LSF_set_severity(logger, severity);
+
+void
 set_sender(logger, sender)
     LogSyslogFast* logger
     char* sender
@@ -103,3 +117,51 @@ ALIAS:
     setPid = 1
 CODE:
     LSF_set_pid(logger, pid);
+
+int
+get_priority(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_priority(logger);
+OUTPUT:
+    RETVAL
+
+int
+get_facility(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_facility(logger);
+OUTPUT:
+    RETVAL
+
+int
+get_severity(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_severity(logger);
+OUTPUT:
+    RETVAL
+
+char*
+get_sender(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_sender(logger);
+OUTPUT:
+    RETVAL
+
+char*
+get_name(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_name(logger);
+OUTPUT:
+    RETVAL
+
+int
+get_pid(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_pid(logger);
+OUTPUT:
+    RETVAL
