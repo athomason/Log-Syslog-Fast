@@ -6,8 +6,9 @@ use warnings;
 
 require Exporter;
 use Log::Syslog::Constants ();
+use Carp 'croak';
 
-our $VERSION = '0.47';
+our $VERSION = '0.48';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -30,7 +31,7 @@ sub AUTOLOAD {
     if (Log::Syslog::Constants->can($meth)) {
         return Log::Syslog::Constants->$meth(@_);
     }
-    die "Undefined subroutine $AUTOLOAD";
+    croak "Undefined subroutine $AUTOLOAD";
 }
 
 require XSLoader;

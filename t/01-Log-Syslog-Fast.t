@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 142;
+use Test::More tests => 143;
 use File::Temp 'tempdir';
 use IO::Select;
 use IO::Socket::INET;
@@ -259,6 +259,13 @@ for my $p (sort keys %servers) {
     # "Connection refused"
     like($@, qr/Error in ->new/, 'unix: ->new with non-sock throws');
 }
+
+# check that bad methods are reported for the caller
+eval {
+    my $logger = Log::Syslog::Fast->new(LOG_UDP, 'localhost', 514, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
+    $logger->nonexistent_method();
+};
+like($@, qr{at t/01-Log-Syslog-Fast.t}); # not Fast.pm
 
 sub expected_payload {
     my ($facility, $severity, $sender, $name, $pid, $msg, $time) = @_;
