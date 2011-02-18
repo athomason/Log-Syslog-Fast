@@ -109,14 +109,73 @@ LSF_set_pid(LogSyslogFast* logger, int pid)
     update_prefix(logger, time(0));
 }
 
+#ifdef AF_INET6
+#define clean_return(x) freeaddrinfo(results); return x;
+#else
+#define clean_return(x) return x;
+#endif
+
+/* must match constants in LogSyslogFast.pm */
+#define LOG_UDP  0
+#define LOG_TCP  1
+#define LOG_UNIX 2
+
 int
 LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
 {
     const struct sockaddr* p_address;
     int address_len;
+#ifdef AF_INET6
+    struct addrinfo* results = NULL;
+#endif
 
     /* set up a socket, letting kernel assign local port */
-    if (proto == 0 || proto == 1) {
+    if (proto == LOG_UDP || proto == LOG_TCP) {
+
+#ifdef AF_INET6
+
+        struct addrinfo *rp;
+        struct addrinfo hints;
+        char portstr[32];
+        int r;
+
+        snprintf(portstr, sizeof(portstr), "%d", port);
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_flags = AI_ADDRCONFIG | AI_NUMERICSERV;
+        hints.ai_family = AF_UNSPEC;
+        if (proto == LOG_TCP) {
+            hints.ai_socktype = SOCK_STREAM;
+        } else {
+            hints.ai_socktype = SOCK_DGRAM;
+        }
+        hints.ai_protocol = 0;
+        hints.ai_addrlen = 0;
+        hints.ai_addr = NULL;
+        hints.ai_canonname = NULL;
+        hints.ai_next = NULL;
+
+        r = getaddrinfo(hostname, portstr, &hints, &results);
+        if (r < 0 || !results) {
+            logger->err = "getaddrinfo failure";
+            return -1;
+        }
+        for (rp = results; rp != NULL; rp = rp->ai_next) {
+            logger->sock = socket(rp->ai_family, rp->ai_socktype, 0);
+            if (logger->sock == -1) {
+                r = errno;
+                continue;
+            }
+            p_address = rp->ai_addr;
+            address_len = rp->ai_addrlen;
+            break;
+        }
+        if (logger->sock == -1) {
+            logger->err = "socket failure";
+            clean_return(-1);
+        }
+
+#else /* !AF_INET6 */
+
         /* resolve the remote host */
         struct hostent* host = gethostbyname(hostname);
         if (!host || !host->h_addr_list || !host->h_addr_list[0]) {
@@ -133,8 +192,7 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
         address_len = sizeof(raddress);
 
         /* construct socket */
-        if (proto == 0) {
-            /* LOG_UDP from LogSyslogFast.pm */
+        if (proto == LOG_UDP) {
             logger->sock = socket(AF_INET, SOCK_DGRAM, 0);
 
             /* make the socket non-blocking */
@@ -146,13 +204,13 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
                 return -1;
             }
         }
-        else if (proto == 1) {
-            /* LOG_TCP from LogSyslogFast.pm */
+        else if (proto == LOG_TCP) {
             logger->sock = socket(AF_INET, SOCK_STREAM, 0);
         }
+
+#endif /* AF_INET6 */
     }
-    else if (proto == 2) {
-        /* LOG_UNIX from LogSyslogFast.pm */
+    else if (proto == LOG_UNIX) {
 
         /* create the log device's address */
         struct sockaddr_un raddress;
@@ -171,7 +229,7 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
 
     if (logger->sock < 0) {
         logger->err = strerror(errno);
-        return -1;
+        clean_return(-1);
     }
 
     /* close the socket after exec to match normal Perl behavior for sockets */
@@ -180,20 +238,20 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
     /* connect the socket */
     if (connect(logger->sock, p_address, address_len) != 0) {
         /* some servers (rsyslog) may use SOCK_DGRAM for unix domain sockets */
-        if (proto == 2 && errno == EPROTOTYPE) {
+        if (proto == LOG_UNIX && errno == EPROTOTYPE) {
             logger->sock = socket(AF_UNIX, SOCK_DGRAM, 0);
             if (connect(logger->sock, p_address, address_len) != 0) {
                 logger->err = strerror(errno);
-                return -1;
+                clean_return(-1);
             }
         }
         else {
             logger->err = strerror(errno);
-            return -1;
+            clean_return(-1);
         }
     }
 
-    return 0;
+    clean_return(0);
 }
 
 int

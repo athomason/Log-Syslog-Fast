@@ -31,7 +31,7 @@ for my $size (-30 .. 30) {
     note "sender offset $size\n";
     my $sender = 'x' x ($bufsize + $size);
     my $l = listener();
-    my $logger = Log::Syslog::Fast->new(LOG_TCP, 'localhost', $port, LOG_LOCAL0, LOG_INFO, $sender, "logger");
+    my $logger = Log::Syslog::Fast->new(LOG_TCP, '127.0.0.1', $port, LOG_LOCAL0, LOG_INFO, $sender, "logger");
     $l->accept;
     eval { $logger->send("\n"); }
 }
@@ -41,7 +41,7 @@ for my $size (-30 .. 30) {
     note "name offset $size\n";
     my $name = 'x' x ($bufsize + $size);
     my $l = listener();
-    my $logger = Log::Syslog::Fast->new(LOG_TCP, 'localhost', $port, LOG_LOCAL0, LOG_INFO, "mymachine", $name);
+    my $logger = Log::Syslog::Fast->new(LOG_TCP, '127.0.0.1', $port, LOG_LOCAL0, LOG_INFO, "mymachine", $name);
     $l->accept;
     eval { $logger->send("\n"); }
 }
@@ -51,7 +51,7 @@ for my $size (-30 .. 30) {
     note "message offset $size\n";
     my $msg = 'x' x ($bufsize + $size);
     my $l = listener();
-    my $logger = Log::Syslog::Fast->new(LOG_TCP, 'localhost', $port, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
+    my $logger = Log::Syslog::Fast->new(LOG_TCP, '127.0.0.1', $port, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
     $l->accept;
     eval { $logger->send("$msg\n"); }
 }
@@ -60,7 +60,7 @@ sub listener {
     my $listener = IO::Socket::INET->new(
         Proto       => 'tcp',
         Type        => SOCK_STREAM,
-        LocalHost   => 'localhost',
+        LocalHost   => '127.0.0.1',
         LocalPort   => $port,
         Reuse       => 1,
         Listen      => 1,

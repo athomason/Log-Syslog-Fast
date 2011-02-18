@@ -164,7 +164,7 @@ Adam Thomason, E<lt>athomason@sixapart.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008 by Six Apart, Ltd.
+Copyright (C) 2009-2011 by Say Media, Inc.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.5 or,

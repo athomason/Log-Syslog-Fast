@@ -1,11 +1,11 @@
 use strict;
 use warnings;
 
-use Test::More tests => 143;
+use Test::More tests => 74;
 use File::Temp 'tempdir';
 use IO::Select;
 use IO::Socket::INET;
-use IO::Socket::UNIX;
+
 use Log::Syslog::Constants ':all';
 use POSIX 'strftime';
 
@@ -13,21 +13,26 @@ BEGIN { use_ok('Log::Syslog::Fast', ':protos') };
 
 my $test_dir = tempdir(CLEANUP => 1);
 
-# old IO::Socket::INET fails with "Bad service '0'" when attempting to use
-# wildcard port
-my $port = 24767;
 sub listen_port {
-    return 0 if $IO::Socket::INET::VERSION >= 1.31;
-    diag("Using port $port for IO::Socket::INET v$IO::Socket::INET::VERSION");
-    return $port++;
+    return 0;
 }
 
-my %servers = (
+my %servers;
+
+eval "use IO::Socket::INET6;";
+
+SKIP: {
+    if ($@) {
+        skip 'Cannot run IPv6 tests without IO::Socket::INET6', 73;
+    }
+
+
+%servers = (
     tcp => sub {
-        my $listener = IO::Socket::INET->new(
+        my $listener = IO::Socket::INET6->new(
             Proto       => 'tcp',
             Type        => SOCK_STREAM,
-            LocalHost   => 'localhost',
+            LocalHost   => '::1',
             LocalPort   => listen_port(),
             Listen      => 5,
             Reuse       => 1,
@@ -39,10 +44,10 @@ my %servers = (
         );
     },
     udp => sub {
-        my $listener = IO::Socket::INET->new(
+        my $listener = IO::Socket::INET6->new(
             Proto       => 'udp',
             Type        => SOCK_DGRAM,
-            LocalHost   => 'localhost',
+            LocalHost   => '::1',
             LocalPort   => listen_port(),
             Reuse       => 1,
         ) or die $!;
@@ -52,37 +57,13 @@ my %servers = (
             address     => [$listener->sockhost, $listener->sockport],
         );
     },
-    unix_stream => sub {
-        my $listener = IO::Socket::UNIX->new(
-            Local   => "$test_dir/stream",
-            Type    => SOCK_STREAM,
-            Listen  => 1,
-        ) or die $!;
-        return StreamServer->new(
-            listener    => $listener,
-            proto       => LOG_UNIX,
-            address     => [$listener->hostpath, 0],
-        );
-    },
-    unix_dgram => sub {
-        my $listener = IO::Socket::UNIX->new(
-            Local   => "$test_dir/dgram",
-            Type    => SOCK_DGRAM,
-            Listen  => 1,
-        ) or die $!;
-        return DgramServer->new(
-            listener    => $listener,
-            proto       => LOG_UNIX,
-            address     => [$listener->hostpath, 0],
-        );
-    },
 );
 
 # strerror(3) messages on linux in the "C" locale are included below for reference
 
-my @params = (LOG_AUTH, LOG_INFO, 'localhost', 'test');
+my @params = (LOG_AUTH, LOG_INFO, '::1', 'test');
 
-for my $proto (LOG_TCP, LOG_UDP, LOG_UNIX) {
+for my $proto (LOG_TCP, LOG_UDP) {
     eval { Log::Syslog::Fast->new($proto, '%^!/0', 0, @params) };
     like($@, qr/^Error in ->new/, "$proto: bad ->new call throws an exception");
 }
@@ -198,13 +179,6 @@ for my $p (sort keys %servers) {
         elsif ($p eq 'udp') {
             ok(!$@, "$p: ->send doesn't throw on server close");
         }
-        elsif ($p eq 'unix_dgram') {
-            # "Connection refused"
-            like($@, qr/Error while sending/, "$p: ->send throws on server close");
-        }
-        elsif ($p eq 'unix_stream') {
-            ok($piped, "$p: ->send raises SIGPIPE on server close");
-        }
 
         # test when server is not initially available
 
@@ -237,35 +211,12 @@ for my $p (sort keys %servers) {
     diag($@) if $@;
 }
 
-# test LOG_UNIX with nonexistent/non-sock endpoint
-{
-    my $filename = "$test_dir/fake";
-
-    my $fake_server = DgramServer->new(
-        listener    => 1,
-        proto       => LOG_UNIX,
-        address     => [$filename, 0],
-    );
-
-    eval {
-        $fake_server->connect(@params);
-    };
-    # "No such file"
-    like($@, qr/Error in ->new/, 'unix: ->new with missing file throws');
-
-    open my $fh, '>', $filename or die "couldn't create fake socket $filename: $!";
-
-    eval { $fake_server->connect(@params); };
-    # "Connection refused"
-    like($@, qr/Error in ->new/, 'unix: ->new with non-sock throws');
-}
-
 # check that bad methods are reported for the caller
 eval {
-    my $logger = Log::Syslog::Fast->new(LOG_UDP, 'localhost', 514, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
+    my $logger = Log::Syslog::Fast->new(LOG_UDP, '::1', 514, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
     $logger->nonexistent_method();
 };
-like($@, qr{at t/01-Log-Syslog-Fast.t}, 'error in caller'); # not Fast.pm
+like($@, qr{at t/05-ipv6.t}, 'error in caller'); # not Fast.pm
 
 sub expected_payload {
     my ($facility, $severity, $sender, $name, $pid, $msg, $time) = @_;
@@ -335,14 +286,6 @@ sub close {
     $self->{listener} = undef;
 }
 
-# remove unix socket file on server close
-sub DESTROY {
-    my $self = shift;
-    if ($self->{address}[1] == 0) {
-        unlink $self->{address}[0];
-    }
-}
-
 package StreamServer;
 
 use base 'Server';
@@ -364,3 +307,4 @@ sub accept {
 }
 
 # vim: filetype=perl
+}

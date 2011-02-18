@@ -1,4 +1,4 @@
-Log-Syslog-Fast version 0.48
+Log-Syslog-Fast version 0.49
 ============================
 
 This module sends syslog messages over a network socket. It works like
@@ -19,7 +19,7 @@ To install this module type the following:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009-2010 by Six Apart, Ltd.
+Copyright (C) 2009-2011 by Say Media, Inc.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.5 or,

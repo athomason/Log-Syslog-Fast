@@ -8,7 +8,7 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.48';
+our $VERSION = '0.49';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -126,7 +126,7 @@ The program name or tag to use for the message.
 =item $logger-E<gt>emit($logmsg, [$time])
 
 Send a syslog message through the configured logger. If $time is not provided,
-CORE::time() will be called for you. That doubles the syscalls per message, so
+B<time(2)> will be called for you. That doubles the syscalls per message, so
 try to pass it if you're already calling time() yourself.
 
 ->send may throw an exception if the system call fails (e.g. the transport
@@ -137,7 +137,7 @@ unwise.
 
 B<emit> is an alias for B<send>.
 
-=head3 NEWLINE CAVEAT
+B<NEWLINE CAVEAT>
 
 Note that B<send> does not add any newline character(s) to its input. You will
 certainly want to do this yourself for TCP connections, or the server will not
@@ -240,7 +240,7 @@ Adam Thomason, E<lt>athomason@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2010 by Six Apart, Ltd.
+Copyright (C) 2009-2011 by Say Media, Inc.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.5 or,
