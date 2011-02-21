@@ -110,7 +110,7 @@ LSF_set_pid(LogSyslogFast* logger, int pid)
 }
 
 #ifdef AF_INET6
-#define clean_return(x) freeaddrinfo(results); return x;
+#define clean_return(x) if (results) freeaddrinfo(results); return x;
 #else
 #define clean_return(x) return x;
 #endif
