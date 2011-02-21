@@ -19,7 +19,7 @@ my $bufsize = 16384;
 
 # hostname
 for my $size (-30 .. 30) {
-    note "hostname offset $size\n";
+    #note "hostname offset $size\n";
     my $hostname = '1' x ($bufsize + $size);
     eval {
         Log::Syslog::Fast->new(LOG_UNIX, $hostname, 0, LOG_LOCAL0, LOG_INFO, "mymachine", "logger")->send('');
@@ -28,7 +28,7 @@ for my $size (-30 .. 30) {
 
 # sender
 for my $size (-30 .. 30) {
-    note "sender offset $size\n";
+    #note "sender offset $size\n";
     my $sender = 'x' x ($bufsize + $size);
     my $l = listener();
     my $logger = Log::Syslog::Fast->new(LOG_TCP, '127.0.0.1', $port, LOG_LOCAL0, LOG_INFO, $sender, "logger");
@@ -38,7 +38,7 @@ for my $size (-30 .. 30) {
 
 # program name
 for my $size (-30 .. 30) {
-    note "name offset $size\n";
+    #note "name offset $size\n";
     my $name = 'x' x ($bufsize + $size);
     my $l = listener();
     my $logger = Log::Syslog::Fast->new(LOG_TCP, '127.0.0.1', $port, LOG_LOCAL0, LOG_INFO, "mymachine", $name);
@@ -48,7 +48,7 @@ for my $size (-30 .. 30) {
 
 # message
 for my $size (-30 .. 30) {
-    note "message offset $size\n";
+    #note "message offset $size\n";
     my $msg = 'x' x ($bufsize + $size);
     my $l = listener();
     my $logger = Log::Syslog::Fast->new(LOG_TCP, '127.0.0.1', $port, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
