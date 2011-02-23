@@ -134,6 +134,11 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
 
 #ifdef AF_INET6
 
+/* http://www.mail-archive.com/bug-gnulib@gnu.org/msg17067.html */
+#ifndef AI_ADDRCONFIG
+#define AI_ADDRCONFIG 0
+#endif
+
         struct addrinfo *rp;
         struct addrinfo hints;
         char portstr[32];

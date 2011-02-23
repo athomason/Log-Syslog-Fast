@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.51   Wed Feb 23 13:47:02 PST 2011
+        - Fix for older NetBSD and OpenBSD which don't define AI_ADDRCONFIG
 0.50   Mon Feb 21 15:13:24 PST 2011
         - Fix segfault in BSDs freeaddrinfo when parameter is null
 0.49   Fri Feb 18 14:46:07 PST 2011
