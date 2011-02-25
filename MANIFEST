@@ -5,6 +5,7 @@ MANIFEST.SKIP
 ppport.h
 README
 Fast.xs
+t/00-compile.t
 t/01-Log-Syslog-Fast.t
 t/02-Log-Syslog-Fast-Simple.t
 t/03-corner-cases.t

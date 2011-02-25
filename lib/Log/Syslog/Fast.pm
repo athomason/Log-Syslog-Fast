@@ -8,7 +8,7 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.51';
+our $VERSION = '0.52';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 

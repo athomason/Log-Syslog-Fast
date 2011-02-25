@@ -1,9 +1,9 @@
 use strict;
 use warnings;
 
-use Test::More tests => 20;
+use Test::More tests => 19;
 
-BEGIN { use_ok('Log::Syslog::Fast', ':all') };
+use Log::Syslog::Fast ':all';
 
 my $facility1 = LOG_AUTH;
 my $severity1 = LOG_INFO;

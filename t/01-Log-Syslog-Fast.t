@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 143;
+use Test::More tests => 142;
 use File::Temp 'tempdir';
 use IO::Select;
 use IO::Socket::INET;
@@ -9,7 +9,7 @@ use IO::Socket::UNIX;
 use Log::Syslog::Constants ':all';
 use POSIX 'strftime';
 
-BEGIN { use_ok('Log::Syslog::Fast', ':protos') };
+use Log::Syslog::Fast ':protos';
 
 my $test_dir = tempdir(CLEANUP => 1);
 

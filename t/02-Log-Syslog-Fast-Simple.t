@@ -1,9 +1,9 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 7;
 
-BEGIN { use_ok('Log::Syslog::Fast::Simple', ':all') };
+use Log::Syslog::Fast::Simple ':all';
 
 my $logger = Log::Syslog::Fast::Simple->new(
     proto    => LOG_UDP,
