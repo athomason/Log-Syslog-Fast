@@ -1,4 +1,4 @@
-package Log::Syslog::Fast;
+package Log::Syslog::Slow;
 
 use 5.006002;
 use strict;
@@ -8,14 +8,16 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.53';
-
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
 # protocols
 use constant LOG_UDP    => 0; # UDP
 use constant LOG_TCP    => 1; # TCP
 use constant LOG_UNIX   => 2; # UNIX socket
+
+use POSIX 'strftime';
+use IO::Socket::INET;
+use IO::Socket::UNIX;
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
@@ -26,16 +28,141 @@ push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-sub AUTOLOAD {
-    (my $meth = our $AUTOLOAD) =~ s/.*:://;
-    if (Log::Syslog::Constants->can($meth)) {
-        return Log::Syslog::Constants->$meth(@_);
-    }
-    croak "Undefined subroutine $AUTOLOAD";
+use constant {
+    PRIORITY => 0,
+    SENDER => 1,
+    NAME => 2,
+    PID => 3,
+    SOCK => 4,
+    LAST_TIME => 5,
+    PREFIX => 6,
+};
+
+sub new {
+    my $ref = shift;
+    my $class = ref $ref || $ref;
+
+    my ($proto, $hostname, $port, $facility, $severity, $sender, $name) = @_;
+
+    my $self = bless [
+        ($facility << 3) | $severity, # prio
+        $sender, # sender
+        $name, # name
+        $$, # pid
+        undef, # sock
+        undef, # last_time
+        undef, # prefix
+        undef, # prefix_len
+    ], $class;
+
+    $self->update_prefix(time());
+
+    $self->set_receiver($proto, $hostname, $port);
+
+    return $self;
 }
 
-require XSLoader;
-XSLoader::load('Log::Syslog::Fast', $VERSION);
+sub update_prefix {
+    my $self = shift;
+    my $t = shift;
+
+    $self->[LAST_TIME] = $t;
+
+    my $timestr = strftime("%h %e %T", localtime $t);
+    $self->[PREFIX] = sprintf "<%d>%s %s %s[%d]: ",
+        $self->[PRIORITY], $timestr, $self->[SENDER], $self->[NAME], $self->[PID];
+}
+
+sub set_receiver {
+    my $self = shift;
+    my ($proto, $hostname, $port) = @_;
+
+    if ($proto == LOG_TCP) {
+        $self->[SOCK] = IO::Socket::INET->new(
+            Proto => 'tcp',
+            PeerHost => $hostname,
+            PeerPort => $port,
+        );
+    }
+    elsif ($proto == LOG_UDP) {
+        $self->[SOCK] = IO::Socket::INET->new(
+            Proto => 'udp',
+            PeerHost => $hostname,
+            PeerPort => $port,
+        );
+    }
+    elsif ($proto == LOG_UNIX) {
+        $self->[SOCK] = IO::Socket::UNIX->new(
+            Proto => SOCK_STREAM,
+            Peer => $hostname,
+        );
+        $self->[SOCK] = IO::Socket::UNIX->new(
+            Proto => SOCK_DGRAM,
+            Peer => $hostname,
+        ) if !$self->[SOCK];
+    }
+
+    die "failed to create socket: $!" unless $self->[SOCK];
+}
+
+sub set_priority {
+    my $self = shift;
+    my ($facility, $severity) = @_;
+    $self->[PRIORITY] = ($facility << 3) | $severity;
+    $self->update_prefix(time);
+}
+
+sub get_facility {
+    my $self = shift;
+    return $self->[PRIORITY] >> 3;
+}
+
+sub get_severity {
+    my $self = shift;
+    return $self->[PRIORITY] & 7;
+}
+
+sub set_facility {
+    my $self = shift;
+    $self->set_priority(shift, $self->get_severity);
+}
+
+sub set_severity {
+    my $self = shift;
+    $self->set_priority($self->get_facility, shift);
+}
+
+sub set_sender {
+    my $self = shift;
+    $self->[SENDER] = shift;
+    $self->update_prefix(time);
+}
+
+sub set_name {
+    my $self = shift;
+    $self->[NAME] = shift;
+    $self->update_prefix(time);
+}
+
+sub set_pid {
+    my $self = shift;
+    $self->[PID] = shift;
+    $self->update_prefix(time);
+}
+
+sub send {
+    my $self = shift;
+    my ($msg, $now) = @_;
+
+    $now ||= time;
+
+    # update the prefix if seconds have rolled over
+    if ($now != $self->[LAST_TIME]) {
+        $self->update_prefix($now);
+    }
+
+    $self->[SOCK]->send($self->[PREFIX] . $msg);
+}
 
 1;
 __END__
@@ -144,17 +271,6 @@ certainly want to do this yourself for TCP connections, or the server will not
 treat each message as a separate line. However with UDP the server should
 accept a message without a trailing newline (though some implementations may
 have difficulty with that).
-
-B<LENGTH LIMITATION>
-
-Syslog packets larger than 16,384 bytes will be silently truncated to that
-length; since this includes the syslog header, the maximum message length is
-somewhat less. However, be aware that RFC 5424 requires only that receivers
-accept messages less than 480 bytes, and recommends that they accept those
-under 2048 bytes. Furthermore, it recommends that messages which exceed the
-supported size be silently truncated. Be sure to test your receiver for its
-maximum effective length and send messages sufficiently shorter than that
-length to ensure full delivery.
 
 =item $logger-E<gt>set_receiver($hostname, $port)
 
