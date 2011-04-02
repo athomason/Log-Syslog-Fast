@@ -8,7 +8,7 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.52';
+our $VERSION = '0.53';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -144,6 +144,17 @@ certainly want to do this yourself for TCP connections, or the server will not
 treat each message as a separate line. However with UDP the server should
 accept a message without a trailing newline (though some implementations may
 have difficulty with that).
+
+B<LENGTH LIMITATION>
+
+Syslog packets larger than 16,384 bytes will be silently truncated to that
+length; since this includes the syslog header, the maximum message length is
+somewhat less. However, be aware that RFC 5424 requires only that receivers
+accept messages less than 480 bytes, and recommends that they accept those
+under 2048 bytes. Furthermore, it recommends that messages which exceed the
+supported size be silently truncated. Be sure to test your receiver for its
+maximum effective length and send messages sufficiently shorter than that
+length to ensure full delivery.
 
 =item $logger-E<gt>set_receiver($hostname, $port)
 

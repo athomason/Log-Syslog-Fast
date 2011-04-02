@@ -267,7 +267,7 @@ LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
         update_prefix(logger, t);
 
     /* paste the message into linebuf just past where the prefix was placed */
-    int msg_len = len < LOG_BUFSIZE - logger->prefix_len ? len : LOG_BUFSIZE - logger->prefix_len;
+    int msg_len = len < LOG_BUFSIZE - logger->prefix_len ? len : LOG_BUFSIZE - logger->prefix_len - 1;
     strncpy(logger->msg_start, msg, msg_len);
     *(logger->msg_start + msg_len) = '\0';
 

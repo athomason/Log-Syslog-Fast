@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.53   Sat Apr  2 00:47:33 PDT 2011
+        - Fix off-by-one buffer overflow (thanks jrockway)
+        - Document message length limitation
 0.52   Thu Feb 24 18:10:55 PST 2011
         - Move use_ok to separate compilation test
 0.51   Wed Feb 23 13:47:02 PST 2011
