@@ -26,16 +26,78 @@ push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-sub AUTOLOAD {
-    (my $meth = our $AUTOLOAD) =~ s/.*:://;
-    if (Log::Syslog::Constants->can($meth)) {
-        return Log::Syslog::Constants->$meth(@_);
-    }
-    croak "Undefined subroutine $AUTOLOAD";
-}
+use constant {
+    PRIORITY => 0,
+    SENDER => 1,
+    NAME => 2,
+    PID => 3,
+    SOCK => 4,
+    LAST_TIME => 5,
+    LINEBUF => 6,
+    PREFIX_LEN => 7,
+    MSG_START => 8,
+    ERR => 9,
+};
 
-require XSLoader;
-XSLoader::load('Log::Syslog::Fast', $VERSION);
+# # configuration
+# int    priority;                /* RFC3164/4.1.1 PRI Part */
+# char   sender[LOG_BUFSIZE];     /* sender hostname */
+# char   name[LOG_BUFSIZE];       /* sending program name */
+# int    pid;                     /* sending program pid */
+# 
+# # resource handles
+# int    sock;                    /* socket fd */
+# 
+# # internal state
+# time_t last_time;               /* time when the prefix was last generated */
+# char   linebuf[LOG_BUFSIZE];    /* log line, including prefix and message */
+# size_t prefix_len;              /* length of the prefix string */
+# char*  msg_start;               /* pointer into linebuf_ after end of prefix */
+# 
+# # error reporting
+# char*  err;                     /* error string */
+
+sub new {
+    my $ref = shift;
+    my $class = ref $ref || shift;
+
+    my ($proto, $hostname, $port, $facility, $severity, $sender, $name) = @_;
+
+    $self->set_sender($sender);
+    $self->set_name($name);
+
+    update_prefix(logger, time(0));
+
+    return LSF_set_receiver(logger, proto, hostname, port);
+
+    my $self = bless [
+        ($facility << 3) | $severity,
+        $sender,
+        $name,
+        $$,
+        undef,
+        time(),
+        '',
+
+    ];
+
+    # configuration
+    int    priority;                /* RFC3164/4.1.1 PRI Part */
+    char   sender[LOG_BUFSIZE];     /* sender hostname */
+    char   name[LOG_BUFSIZE];       /* sending program name */
+    int    pid;                     /* sending program pid */
+
+    # resource handles
+    int    sock;                    /* socket fd */
+
+    # internal state
+    time_t last_time;               /* time when the prefix was last generated */
+    char   linebuf[LOG_BUFSIZE];    /* log line, including prefix and message */
+    size_t prefix_len;              /* length of the prefix string */
+    char*  msg_start;               /* pointer into linebuf_ after end of prefix */
+
+    # error reporting
+    char*  err;                     /* error string */
 
 1;
 __END__
