@@ -12,7 +12,7 @@ use Log::Syslog::Constants ':all';
 use POSIX 'strftime';
 
 use Log::Syslog::Fast ':protos';
-use Log::Syslog::Slow ();
+use Log::Syslog::PurePerl ();
 
 my $test_dir = tempdir(CLEANUP => 1);
 
@@ -91,7 +91,7 @@ sub bench(&$) {
 }
 
 for my $p (keys %servers) {
-    for my $impl (qw( Fast Slow )) {
+    for my $impl (qw( Fast PurePerl )) {
         my $listen = $servers{$p};
 
         # basic behavior

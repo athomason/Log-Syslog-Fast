@@ -1,4 +1,4 @@
-package Log::Syslog::Slow;
+package Log::Syslog::PurePerl;
 
 use 5.006002;
 use strict;
@@ -151,17 +151,14 @@ sub set_pid {
 }
 
 sub send {
-    my $self = shift;
-    my ($msg, $now) = @_;
-
-    $now ||= time;
+    my $now = $_[2] || time;
 
     # update the prefix if seconds have rolled over
-    if ($now != $self->[LAST_TIME]) {
-        $self->update_prefix($now);
+    if ($now != $_[0][LAST_TIME]) {
+        $_[0]->update_prefix($now);
     }
 
-    $self->[SOCK]->send($self->[PREFIX] . $msg);
+    send $_[0][SOCK], $_[0][PREFIX] . $_[1], 0;
 }
 
 1;
