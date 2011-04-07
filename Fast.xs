@@ -102,7 +102,9 @@ set_sender(logger, sender)
 ALIAS:
     setSender = 1
 CODE:
-    LSF_set_sender(logger, sender);
+    int ret = LSF_set_sender(logger, sender);
+    if (ret < 0)
+        croak("Error in set_sender: %s", logger->err);
 
 void
 set_name(logger, name)
@@ -111,7 +113,9 @@ set_name(logger, name)
 ALIAS:
     setName = 1
 CODE:
-    LSF_set_name(logger, name);
+    int ret = LSF_set_name(logger, name);
+    if (ret < 0)
+        croak("Error in set_name: %s", logger->err);
 
 void
 set_pid(logger, pid)
@@ -146,7 +150,7 @@ CODE:
 OUTPUT:
     RETVAL
 
-char*
+const char*
 get_sender(logger)
     LogSyslogFast* logger
 CODE:
@@ -154,7 +158,7 @@ CODE:
 OUTPUT:
     RETVAL
 
-char*
+const char*
 get_name(logger)
     LogSyslogFast* logger
 CODE:

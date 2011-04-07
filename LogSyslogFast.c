@@ -12,6 +12,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#define INITIAL_BUFSIZE 2048
+
 static
 void
 update_prefix(LogSyslogFast* logger, time_t t)
@@ -21,12 +23,15 @@ update_prefix(LogSyslogFast* logger, time_t t)
     char timestr[30];
     strftime(timestr, 30, "%h %e %T", localtime(&t));
 
-    logger->prefix_len = snprintf(logger->linebuf, LOG_BUFSIZE,
+    if (!logger->sender || !logger->name)
+        return; /* still initializing */
+
+    logger->prefix_len = snprintf(logger->linebuf, logger->bufsize,
         "<%d>%s %s %s[%d]: ",
         logger->priority, timestr, logger->sender, logger->name, logger->pid
     );
-    if (logger->prefix_len > LOG_BUFSIZE - 1)
-        logger->prefix_len = LOG_BUFSIZE - 1;
+    if (logger->prefix_len > logger->bufsize - 1)
+        logger->prefix_len = logger->bufsize - 1;
 
     /* cache the location in linebuf where msg should be pasted in */
     logger->msg_start = logger->linebuf + logger->prefix_len;
@@ -40,14 +45,22 @@ LSF_alloc()
 
 int
 LSF_init(
-    LogSyslogFast* logger, int proto, char* hostname, int port,
-    int facility, int severity, char* sender, char* name)
+    LogSyslogFast* logger, int proto, const char* hostname, int port,
+    int facility, int severity, const char* sender, const char* name)
 {
     if (!logger)
         return -1;
 
     logger->pid = getpid();
 
+    logger->linebuf = malloc(logger->bufsize = INITIAL_BUFSIZE);
+    if (!logger->linebuf) {
+        logger->err = strerror(errno);
+        return -1;
+    }
+
+    logger->sender = NULL;
+    logger->name = NULL;
     LSF_set_sender(logger, sender);
     LSF_set_name(logger, name);
 
@@ -63,6 +76,9 @@ LSF_destroy(LogSyslogFast* logger)
     int ret = close(logger->sock);
     if (ret)
         logger->err = strerror(errno);
+    free(logger->sender);
+    free(logger->name);
+    free(logger->linebuf);
     free(logger);
     return ret;
 }
@@ -86,20 +102,30 @@ LSF_set_severity(LogSyslogFast* logger, int severity)
     LSF_set_priority(logger, LSF_get_facility(logger), severity);
 }
 
-void
-LSF_set_sender(LogSyslogFast* logger, char* sender)
+int
+LSF_set_sender(LogSyslogFast* logger, const char* sender)
 {
-    memset(logger->sender, '\0', sizeof(logger->sender));
-    strncpy(logger->sender, sender, sizeof(logger->sender) - 1);
+    free(logger->sender);
+    logger->sender = strdup(sender);
+    if (!logger->sender) {
+        logger->err = "strdup failure in set_sender";
+        return -1;
+    }
     update_prefix(logger, time(0));
+    return 0;
 }
 
-void
-LSF_set_name(LogSyslogFast* logger, char* name)
+int
+LSF_set_name(LogSyslogFast* logger, const char* name)
 {
-    memset(logger->name, '\0', sizeof(logger->name));
-    strncpy(logger->name, name, sizeof(logger->name) - 1);
+    free(logger->name);
+    logger->name = strdup(name);
+    if (!logger->name) {
+        logger->err = "strdup failure in set_name";
+        return -1;
+    }
     update_prefix(logger, time(0));
+    return 0;
 }
 
 void
@@ -121,7 +147,7 @@ LSF_set_pid(LogSyslogFast* logger, int pid)
 #define LOG_UNIX 2
 
 int
-LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
+LSF_set_receiver(LogSyslogFast* logger, int proto, const char* hostname, int port)
 {
     const struct sockaddr* p_address;
     int address_len;
@@ -260,18 +286,41 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, char* hostname, int port)
 }
 
 int
-LSF_send(LogSyslogFast* logger, char* msg, int len, time_t t)
+LSF_send(LogSyslogFast* logger, const char* msg_str, int msg_len, time_t t)
 {
     /* update the prefix if seconds have rolled over */
     if (t != logger->last_time)
         update_prefix(logger, t);
 
-    /* paste the message into linebuf just past where the prefix was placed */
-    int msg_len = len < LOG_BUFSIZE - logger->prefix_len ? len : LOG_BUFSIZE - logger->prefix_len - 1;
-    strncpy(logger->msg_start, msg, msg_len);
-    *(logger->msg_start + msg_len) = '\0';
+    int line_len = logger->prefix_len + msg_len;
+    /* ensure there's space in the buffer for total length including a trailing NULL */
+    if (logger->bufsize < line_len + 1) {
+        /* try to increase buffer */
+        int new_bufsize = 2 * logger->bufsize;
+        while (new_bufsize < line_len + 1)
+            new_bufsize *= 2;
+        if (new_bufsize < 0) {
+            /* overflow */
+            logger->err = "message too large";
+            return -1;
+        }
 
-    int ret = send(logger->sock, logger->linebuf, logger->prefix_len + msg_len, 0);
+        char* new_buf = realloc(logger->linebuf, new_bufsize);
+        if (!new_buf) {
+            logger->err = strerror(errno);
+            return -1;
+        }
+
+        logger->linebuf = new_buf;
+        logger->bufsize = new_bufsize;
+        logger->msg_start = logger->linebuf + logger->prefix_len;
+    }
+
+    /* paste the message into linebuf just past where the prefix was placed */
+    strcpy(logger->msg_start, msg_str);
+
+    int ret = send(logger->sock, logger->linebuf, line_len, 0);
+
     if (ret < 0)
         logger->err = strerror(errno);
     return ret;
@@ -295,13 +344,13 @@ LSF_get_severity(LogSyslogFast* logger)
     return logger->priority & 7;
 }
 
-char*
+const char*
 LSF_get_sender(LogSyslogFast* logger)
 {
     return logger->sender;
 }
 
-char*
+const char*
 LSF_get_name(LogSyslogFast* logger)
 {
     return logger->name;
