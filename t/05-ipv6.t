@@ -9,6 +9,8 @@ use IO::Socket::INET;
 use Log::Syslog::Constants ':all';
 use POSIX 'strftime';
 
+require 't/lib/LSFServer.pm';
+
 use Log::Syslog::Fast ':protos';
 
 my $test_dir = tempdir(CLEANUP => 1);
@@ -246,65 +248,6 @@ sub wait_for_readable {
     my $sock = shift;
     return IO::Select->new($sock)->can_read(1);
 }
-
-package ServerCreator;
-
-sub new {
-    my $class = shift;
-    return bless {label => $_[0], listen => $_[1]}, $class;
-}
-
-
-sub listen {
-    my $self = shift;
-    $self->{listen}->();
-}
-
-package Server;
-
-sub new {
-    my $class = shift;
-    return bless {@_}, $class;
-}
-sub proto {
-    my $self = shift;
-    return $self->{proto};
-}
-
-sub address {
-    my $self = shift;
-    return @{ $self->{address} };
-}
-
-sub connect {
-    my $self = shift;
-    return Log::Syslog::Fast->new($self->proto, $self->address, @_);
-}
-
-sub close {
-    my $self = shift;
-    $self->{listener} = undef;
-}
-
-package StreamServer;
-
-use base 'Server';
-
-sub accept {
-    my $self = shift;
-    my $receiver = $self->{listener}->accept;
-    $receiver->blocking(0);
-    return $receiver;
-}
-
-package DgramServer;
-
-use base 'Server';
-
-sub accept {
-    my $self = shift;
-    return $self->{listener};
 }
 
 # vim: filetype=perl
-}
