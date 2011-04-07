@@ -11,6 +11,7 @@ t/02-Log-Syslog-Fast-Simple.t
 t/03-corner-cases.t
 t/04-accessors.t
 t/05-ipv6.t
+t/lib/LSFServer.pm
 lib/Log/Syslog/Fast.pm
 lib/Log/Syslog/Fast/Simple.pm
 LogSyslogFast.c
