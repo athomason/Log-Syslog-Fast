@@ -43,12 +43,16 @@ CODE:
 int
 send(logger, logmsg, now = time(0))
     LogSyslogFast* logger
-    char* logmsg
+    SV* logmsg
     time_t now
 ALIAS:
     emit = 1
+INIT:
+    STRLEN msglen;
+    const char* msgstr;
+    msgstr = SvPV(logmsg, msglen);
 CODE:
-    RETVAL = LSF_send(logger, logmsg, strlen(logmsg), now);
+    RETVAL = LSF_send(logger, msgstr, msglen, now);
     if (RETVAL < 0)
         croak("Error while sending: %s", logger->err);
 OUTPUT:
