@@ -1,4 +1,8 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.54   Wed Apr  6 18:20:45 PDT 2011
+        - Avoid recomputing length of message string
+        - Add ::PP pure-perl version for comparison
+        - Make string storage dynamic and growable to limits of memory
 0.53   Sat Apr  2 00:47:33 PDT 2011
         - Fix off-by-one buffer overflow (thanks jrockway)
         - Document message length limitation

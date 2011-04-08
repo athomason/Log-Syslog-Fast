@@ -58,7 +58,7 @@ for my $p (sort keys %servers) {
 
         my $time = time;
 
-        my $msg = '.' x 4500; # larger than LOG_BUFSIZE
+        my $msg = '.' x 4500; # larger than INITIAL_BUFSIZE
 
         my @payload_params = (@params, $$, $msg, $time);
         my $expected = expected_payload(@payload_params);
