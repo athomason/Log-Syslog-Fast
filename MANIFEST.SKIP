@@ -2,4 +2,4 @@
 .shipit
 const-c.inc
 const-xs.inc
-bench.pl
+benchmarks
