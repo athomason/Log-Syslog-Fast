@@ -49,7 +49,7 @@ for my $p (sort keys %servers) {
         my $server = $listen->();
         ok($server->{listener}, "$p: listen") or diag("listen failed: $!");
 
-        my $logger = $server->connect(@params);
+        my $logger = $server->connect('Log::Syslog::Fast' => @params);
         ok($logger, "$p: ->new returns something");
         is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
 

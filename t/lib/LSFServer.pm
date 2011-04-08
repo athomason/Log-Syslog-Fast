@@ -29,7 +29,8 @@ sub address {
 
 sub connect {
     my $self = shift;
-    return Log::Syslog::Fast->new($self->proto, $self->address, @_);
+    my $class = shift;
+    return $class->new($self->proto, $self->address, @_);
 }
 
 sub close {

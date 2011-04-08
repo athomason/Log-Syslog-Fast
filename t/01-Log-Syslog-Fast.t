@@ -97,7 +97,7 @@ for my $p (sort keys %servers) {
         my $server = $listen->();
         ok($server->{listener}, "$p: listen") or diag("listen failed: $!");
 
-        my $logger = $server->connect(@params);
+        my $logger = $server->connect('Log::Syslog::Fast' => @params);
         ok($logger, "$p: ->new returns something");
         is(ref $logger, 'Log::Syslog::Fast', "$p: ->new returns a Log::Syslog::Fast object");
 
@@ -133,7 +133,7 @@ for my $p (sort keys %servers) {
     eval {
 
         my $server = $listen->();
-        my $logger = $server->connect(@params);
+        my $logger = $server->connect('Log::Syslog::Fast' => @params);
 
         # ignore first connection for stream protos since reconnect is expected
         $server->accept();
@@ -187,7 +187,7 @@ for my $p (sort keys %servers) {
 
         # test when server is initially available but goes away
         my $server = $listen->();
-        my $logger = $server->connect(@params);
+        my $logger = $server->connect('Log::Syslog::Fast' => @params);
         $server->close();
 
         my $piped = 0;
@@ -218,7 +218,7 @@ for my $p (sort keys %servers) {
             # connectionless udp should fail on 2nd call to ->send, after ICMP
             # error is noticed by kernel
 
-            my $logger = $server->connect(@params);
+            my $logger = $server->connect('Log::Syslog::Fast' => @params);
             ok($logger, "$p: ->new doesn't throw on connect to missing server");
 
             for my $n (1..2) {
@@ -250,14 +250,14 @@ for my $p (sort keys %servers) {
     );
 
     eval {
-        $fake_server->connect(@params);
+        $fake_server->connect('Log::Syslog::Fast' => @params);
     };
     # "No such file"
     like($@, qr/Error in ->new/, 'unix: ->new with missing file throws');
 
     open my $fh, '>', $filename or die "couldn't create fake socket $filename: $!";
 
-    eval { $fake_server->connect(@params); };
+    eval { $fake_server->connect('Log::Syslog::Fast' => @params); };
     # "Connection refused"
     like($@, qr/Error in ->new/, 'unix: ->new with non-sock throws');
 }

@@ -97,7 +97,7 @@ for my $p (sort keys %servers) {
         my $server = $listen->();
         ok($server->{listener}, "$p: listen") or diag("listen failed: $!");
 
-        my $logger = $server->connect(@params);
+        my $logger = $server->connect('Log::Syslog::Fast::PP' => @params);
         ok($logger, "$p: ->new returns something");
         is(ref $logger, 'Log::Syslog::Fast::PP', "$p: ->new returns a Log::Syslog::Fast::PP object");
 
@@ -133,7 +133,7 @@ for my $p (sort keys %servers) {
     eval {
 
         my $server = $listen->();
-        my $logger = $server->connect(@params);
+        my $logger = $server->connect('Log::Syslog::Fast::PP' => @params);
 
         # ignore first connection for stream protos since reconnect is expected
         $server->accept();
@@ -194,14 +194,14 @@ for my $p (sort keys %servers) {
     );
 
     eval {
-        $fake_server->connect(@params);
+        $fake_server->connect('Log::Syslog::Fast::PP' => @params);
     };
     # "No such file"
     like($@, qr/Error in ->/, 'unix: ->new with missing file throws');
 
     open my $fh, '>', $filename or die "couldn't create fake socket $filename: $!";
 
-    eval { $fake_server->connect(@params); };
+    eval { $fake_server->connect('Log::Syslog::Fast::PP' => @params); };
     # "Connection refused"
     like($@, qr/Error in ->/, 'unix: ->new with non-sock throws');
 }
