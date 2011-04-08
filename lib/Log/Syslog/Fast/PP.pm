@@ -1,14 +1,13 @@
-package Log::Syslog::PurePerl;
+package Log::Syslog::Fast::PP;
 
 use 5.006002;
 use strict;
 use warnings;
 
 require Exporter;
-use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our @ISA = qw(Log::Syslog::Constants Exporter);
+our @ISA = qw(Exporter);
 
 # protocols
 use constant LOG_UDP    => 0; # UDP
@@ -21,22 +20,19 @@ use IO::Socket::UNIX;
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
-    %Log::Syslog::Constants::EXPORT_TAGS,
 );
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
 
-use constant {
-    PRIORITY => 0,
-    SENDER => 1,
-    NAME => 2,
-    PID => 3,
-    SOCK => 4,
-    LAST_TIME => 5,
-    PREFIX => 6,
-};
+use constant PRIORITY   => 0;
+use constant SENDER     => 1;
+use constant NAME       => 2;
+use constant PID        => 3;
+use constant SOCK       => 4;
+use constant LAST_TIME  => 5;
+use constant PREFIX     => 6;
 
 sub new {
     my $ref = shift;
@@ -79,30 +75,34 @@ sub set_receiver {
 
     if ($proto == LOG_TCP) {
         $self->[SOCK] = IO::Socket::INET->new(
-            Proto => 'tcp',
+            Proto    => 'tcp',
             PeerHost => $hostname,
             PeerPort => $port,
         );
     }
     elsif ($proto == LOG_UDP) {
         $self->[SOCK] = IO::Socket::INET->new(
-            Proto => 'udp',
+            Proto    => 'udp',
             PeerHost => $hostname,
             PeerPort => $port,
         );
     }
     elsif ($proto == LOG_UNIX) {
-        $self->[SOCK] = IO::Socket::UNIX->new(
-            Proto => SOCK_STREAM,
-            Peer => $hostname,
-        );
-        $self->[SOCK] = IO::Socket::UNIX->new(
-            Proto => SOCK_DGRAM,
-            Peer => $hostname,
-        ) if !$self->[SOCK];
+        eval {
+            $self->[SOCK] = IO::Socket::UNIX->new(
+                Proto => SOCK_STREAM,
+                Peer  => $hostname,
+            );
+        };
+        if ($@ || !$self->[SOCK]) {
+            $self->[SOCK] = IO::Socket::UNIX->new(
+                Proto => SOCK_DGRAM,
+                Peer  => $hostname,
+            );
+        }
     }
 
-    die "failed to create socket: $!" unless $self->[SOCK];
+    die "Error in ->set_receiver: $!" unless $self->[SOCK];
 }
 
 sub set_priority {
@@ -110,16 +110,6 @@ sub set_priority {
     my ($facility, $severity) = @_;
     $self->[PRIORITY] = ($facility << 3) | $severity;
     $self->update_prefix(time);
-}
-
-sub get_facility {
-    my $self = shift;
-    return $self->[PRIORITY] >> 3;
-}
-
-sub get_severity {
-    my $self = shift;
-    return $self->[PRIORITY] & 7;
 }
 
 sub set_facility {
@@ -161,18 +151,47 @@ sub send {
     send $_[0][SOCK], $_[0][PREFIX] . $_[1], 0;
 }
 
+sub get_priority {
+    my $self = shift;
+    return $self->[PRIORITY];
+}
+
+sub get_facility {
+    my $self = shift;
+    return $self->[PRIORITY] >> 3;
+}
+
+sub get_severity {
+    my $self = shift;
+    return $self->[PRIORITY] & 7;
+}
+
+sub get_sender {
+    my $self = shift;
+    return $self->[SENDER];
+}
+
+sub get_name {
+    my $self = shift;
+    return $self->[NAME];
+}
+
+sub get_pid {
+    my $self = shift;
+    return $self->[PID];
+}
+
 1;
 __END__
 
 =head1 NAME
 
-Log::Syslog::Fast - Perl extension for sending syslog messages over TCP, UDP,
-or UNIX sockets with minimal CPU overhead.
+Log::Syslog::Fast::PP - XS-free, API-compatible version of Log::Syslog::Fast
 
 =head1 SYNOPSIS
 
-  use Log::Syslog::Fast ':all';
-  my $logger = Log::Syslog::Fast->new(LOG_UDP, "127.0.0.1", 514, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
+  use Log::Syslog::Fast::PP ':all';
+  my $logger = Log::Syslog::Fast::PP->new(LOG_UDP, "127.0.0.1", 514, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
   $logger->send("log message", time);
 
 =head1 DESCRIPTION
@@ -190,9 +209,9 @@ This module supercedes the less general L<Log::Syslog::UDP>.
 
 =over 4
 
-=item Log::Syslog::Fast-E<gt>new($proto, $hostname, $port, $facility, $severity, $sender, $name);
+=item Log::Syslog::Fast::PP-E<gt>new($proto, $hostname, $port, $facility, $severity, $sender, $name);
 
-Create a new Log::Syslog::Fast object with the following parameters:
+Create a new Log::Syslog::Fast::PP object with the following parameters:
 
 =over 4
 
@@ -352,7 +371,7 @@ Use Log::Syslog::Constants to export priority constants, e.g. LOG_INFO.
 
 L<Log::Syslog::Constants>
 
-L<Sys::Syslog>
+L<Log::Syslog::Fast>
 
 =head1 BUGS
 

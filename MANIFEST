@@ -12,7 +12,9 @@ t/03-corner-cases.t
 t/04-accessors.t
 t/05-ipv6.t
 t/lib/LSFServer.pm
+t/07-Log-Syslog-Fast-PP.t
 lib/Log/Syslog/Fast.pm
+lib/Log/Syslog/Fast/PP.pm
 lib/Log/Syslog/Fast/Simple.pm
 LogSyslogFast.c
 LogSyslogFast.h
