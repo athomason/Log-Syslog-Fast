@@ -317,7 +317,7 @@ LSF_send(LogSyslogFast* logger, const char* msg_str, int msg_len, time_t t)
     }
 
     /* paste the message into linebuf just past where the prefix was placed */
-    strcpy(logger->msg_start, msg_str);
+    memcpy(logger->msg_start, msg_str, msg_len + 1); /* include perl-added null */
 
     int ret = send(logger->sock, logger->linebuf, line_len, 0);
 
