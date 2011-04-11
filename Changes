@@ -1,4 +1,9 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.55   Mon Apr 11 16:41:43 PDT 2011
+        - Recover some speed lost in 0.54 by replacing strcpy with strncpy
+        - Add tools for benchmarking different things
+        - Replace redundant POD in PP.pm with a pointer to Fast.pm
+        - Remove overflow tests which make NetBSD unhappy
 0.54   Wed Apr  6 18:20:45 PDT 2011
         - Avoid recomputing length of message string
         - Add ::PP pure-perl version for comparison
