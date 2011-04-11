@@ -24,3 +24,6 @@ typemap
 Log-Syslog-Fast.spec
 fallback/const-c.inc
 fallback/const-xs.inc
+benchmarks/bench-protos.pl
+benchmarks/bench-sizes.pl
+benchmarks/bench-tarballs.pl

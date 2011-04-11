@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# compare speeds of different transport protocols (tcp/udp/unix socket) and use cases
+
 use strict;
 use warnings;
 
