@@ -160,9 +160,14 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, const char* hostname, int por
 
 #ifdef AF_INET6
 
-/* http://www.mail-archive.com/bug-gnulib@gnu.org/msg17067.html */
+/* For NetBSD: http://www.mail-archive.com/bug-gnulib@gnu.org/msg17067.html */
 #ifndef AI_ADDRCONFIG
 #define AI_ADDRCONFIG 0
+#endif
+
+/* For MacOS: http://mailman.videolan.org/pipermail/vlc-devel/2008-May/044005.html */
+#ifndef AI_NUMERICSERV
+#define AI_NUMERICSERV 0
 #endif
 
         struct addrinfo *rp;
