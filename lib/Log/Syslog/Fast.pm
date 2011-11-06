@@ -8,7 +8,7 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.55';
+our $VERSION = '0.56';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -145,10 +145,10 @@ treat each message as a separate line. However with UDP the server should
 accept a message without a trailing newline (though some implementations may
 have difficulty with that).
 
-=item $logger-E<gt>set_receiver($hostname, $port)
+=item $logger-E<gt>set_receiver($proto, $hostname, $port)
 
-Change the destination host and port. This will force a reconnection in LOG_TCP
-or LOG_UNIX mode.
+Change the protocol, destination host, and port. This will force a reconnection
+in LOG_TCP or LOG_UNIX mode.
 
 =item $logger-E<gt>set_priority($facility, $severity)
 

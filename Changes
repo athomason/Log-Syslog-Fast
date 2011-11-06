@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.56   Sat Nov  5 19:44:36 PDT 2011
+        - Fix documentation for set_receiver. Thanks maxs@.
 0.55   Mon Apr 11 16:41:43 PDT 2011
         - Recover some speed lost in 0.54 by replacing strcpy with strncpy
         - Add tools for benchmarking different things
