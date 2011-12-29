@@ -173,3 +173,11 @@ CODE:
     RETVAL = LSF_get_pid(logger);
 OUTPUT:
     RETVAL
+
+int
+_get_sock(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_sock(logger);
+OUTPUT:
+    RETVAL

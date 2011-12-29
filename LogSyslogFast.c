@@ -51,6 +51,8 @@ LSF_init(
     if (!logger)
         return -1;
 
+    logger->sock = -1;
+
     logger->pid = getpid();
 
     logger->linebuf = malloc(logger->bufsize = INITIAL_BUFSIZE);
@@ -154,6 +156,14 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, const char* hostname, int por
 #ifdef AF_INET6
     struct addrinfo* results = NULL;
 #endif
+
+    if (logger->sock >= 0) {
+        int ret = close(logger->sock);
+        if (ret) {
+            logger->err = strerror(errno);
+            return -1;
+        }
+    }
 
     /* set up a socket, letting kernel assign local port */
     if (proto == LOG_UDP || proto == LOG_TCP) {
@@ -365,4 +375,10 @@ int
 LSF_get_pid(LogSyslogFast* logger)
 {
     return logger->pid;
+}
+
+int
+LSF_get_sock(LogSyslogFast* logger)
+{
+    return logger->sock;
 }

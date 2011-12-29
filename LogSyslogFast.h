@@ -46,6 +46,8 @@ const char* LSF_get_sender(LogSyslogFast* logger);
 const char* LSF_get_name(LogSyslogFast* logger);
 int LSF_get_pid(LogSyslogFast* logger);
 
+int LSF_get_sock(LogSyslogFast* logger);
+
 int LSF_send(LogSyslogFast* logger, const char* msg, int len, time_t t);
 
 #endif
