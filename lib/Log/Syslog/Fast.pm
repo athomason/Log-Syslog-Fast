@@ -17,11 +17,17 @@ use constant LOG_UDP    => 0; # UDP
 use constant LOG_TCP    => 1; # TCP
 use constant LOG_UNIX   => 2; # UNIX socket
 
+# formats
+use constant LOG_RFC3164 => 0;
+use constant LOG_RFC5424 => 1;
+
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
+	formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
     %Log::Syslog::Constants::EXPORT_TAGS,
 );
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
+push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'formats'} };
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
@@ -174,6 +180,11 @@ Change what is sent as the name of the sending program.
 
 Change what is sent as the process id of the sending program.
 
+=item $logger-E<gt>set_format($format)
+
+Change the message format. This should be either the constant LOG_RFC3164 (the
+default) or LOG_RFC5424.
+
 =item $logger-E<gt>get_priority()
 
 Returns the current priority value.
@@ -185,6 +196,10 @@ Returns the current facility value.
 =item $logger-E<gt>get_severity()
 
 Returns the current severity value.
+
+=item $logger-E<gt>get_format($format)
+
+Returns the current message format.
 
 =back
 

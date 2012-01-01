@@ -126,6 +126,15 @@ ALIAS:
 CODE:
     LSF_set_pid(logger, pid);
 
+void
+set_format(logger, format)
+    LogSyslogFast* logger
+    int format
+ALIAS:
+    setFormat = 1
+CODE:
+    LSF_set_format(logger, format);
+
 int
 get_priority(logger)
     LogSyslogFast* logger
@@ -171,6 +180,14 @@ get_pid(logger)
     LogSyslogFast* logger
 CODE:
     RETVAL = LSF_get_pid(logger);
+OUTPUT:
+    RETVAL
+
+int
+get_format(logger)
+    LogSyslogFast* logger
+CODE:
+    RETVAL = LSF_get_format(logger);
 OUTPUT:
     RETVAL
 
