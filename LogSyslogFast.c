@@ -76,7 +76,6 @@ LSF_init(
     logger->format = LOG_RFC3164;
     LSF_set_sender(logger, sender);
     LSF_set_name(logger, name);
-    LSF_set_format(logger, LOG_RFC3164);
 
     logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));
