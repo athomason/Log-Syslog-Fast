@@ -21,7 +21,7 @@ update_prefix(LogSyslogFast* logger, time_t t)
     logger->last_time = t;
 
     char timestr[40];
-    char *time_format = "%h %e %T";
+    const char *time_format = "%h %e %T";
     if (logger->format == LOG_RFC5424) {
         time_format = "%Y-%m-%dT%H:%M:%S%z";
     }
@@ -31,7 +31,7 @@ update_prefix(LogSyslogFast* logger, time_t t)
     if (!logger->sender || !logger->name)
         return; /* still initializing */
 
-    char *msg_format = "<%d>%s %s %s[%d]: ";
+    const char *msg_format = "<%d>%s %s %s[%d]: ";
     if (logger->format == LOG_RFC5424) {
         msg_format = "<%d>1 %s %s %s %d - - ";
     }
