@@ -63,9 +63,9 @@ sub send {
         $args[_FACILITY] = $facility;
         $args[_SEVERITY] = $severity;
 
-		my $format = pop(@args);
+        my $format = pop(@args);
         $logger = $_[0][_LOGGERS][$facility][$severity] = Log::Syslog::Fast->new(@args);
-		$logger->set_format($format);
+        $logger->set_format($format);
     }
 
     return $logger->send($_[1], $_[2] || time);

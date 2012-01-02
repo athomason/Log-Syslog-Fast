@@ -23,7 +23,7 @@ use constant LOG_RFC5424 => 1;
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
-	formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
+    formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
     %Log::Syslog::Constants::EXPORT_TAGS,
 );
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };

@@ -21,24 +21,24 @@ update_prefix(LogSyslogFast* logger, time_t t)
     logger->last_time = t;
 
     char timestr[40];
-	char *time_format = "%h %e %T";
-	if (logger->format == LOG_RFC5424) {
-		time_format = "%Y-%m-%dT%H:%M:%S%z";
-	}
+    char *time_format = "%h %e %T";
+    if (logger->format == LOG_RFC5424) {
+        time_format = "%Y-%m-%dT%H:%M:%S%z";
+    }
 
-	strftime(timestr, 40, time_format, localtime(&t));
+    strftime(timestr, 40, time_format, localtime(&t));
 
     if (!logger->sender || !logger->name)
         return; /* still initializing */
 
-	char *msg_format = "<%d>%s %s %s[%d]: ";
-	if (logger->format == LOG_RFC5424) {
-		msg_format = "<%d>1 %s %s %s %d - - ";
-	}
-	logger->prefix_len = snprintf(logger->linebuf, logger->bufsize,
-		msg_format,
-		logger->priority, timestr, logger->sender, logger->name, logger->pid
-	);
+    char *msg_format = "<%d>%s %s %s[%d]: ";
+    if (logger->format == LOG_RFC5424) {
+        msg_format = "<%d>1 %s %s %s %d - - ";
+    }
+    logger->prefix_len = snprintf(logger->linebuf, logger->bufsize,
+        msg_format,
+        logger->priority, timestr, logger->sender, logger->name, logger->pid
+    );
 
     if (logger->prefix_len > logger->bufsize - 1)
         logger->prefix_len = logger->bufsize - 1;
@@ -73,10 +73,10 @@ LSF_init(
 
     logger->sender = NULL;
     logger->name = NULL;
-	logger->format = LOG_RFC3164;
+    logger->format = LOG_RFC3164;
     LSF_set_sender(logger, sender);
     LSF_set_name(logger, name);
-	LSF_set_format(logger, LOG_RFC3164);
+    LSF_set_format(logger, LOG_RFC3164);
 
     logger->priority = (facility << 3) | severity;
     update_prefix(logger, time(0));

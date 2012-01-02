@@ -24,7 +24,7 @@ use IO::Socket::UNIX;
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
-	formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
+    formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
 );
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'formats'} };
@@ -40,7 +40,7 @@ use constant SOCK       => 4;
 use constant LAST_TIME  => 5;
 use constant PREFIX     => 6;
 use constant PREFIX_LEN => 7;
-use constant FORMAT	    => 8;
+use constant FORMAT     => 8;
 
 sub new {
     my $ref = shift;
@@ -57,7 +57,7 @@ sub new {
         undef, # last_time
         undef, # prefix
         undef, # prefix_len
-		LOG_RFC3164, # format
+        LOG_RFC3164, # format
     ], $class;
 
     $self->update_prefix(time());
@@ -74,16 +74,16 @@ sub update_prefix {
     $self->[LAST_TIME] = $t;
 
     my $timestr = strftime("%h %e %T", localtime $t);
-	if ($self->[FORMAT] == LOG_RFC5424) {
-		$timestr = strftime("%Y-%m-%dT%H:%M:%S%z", localtime $t);
-	}
+    if ($self->[FORMAT] == LOG_RFC5424) {
+        $timestr = strftime("%Y-%m-%dT%H:%M:%S%z", localtime $t);
+    }
 
     $self->[PREFIX] = sprintf "<%d>%s %s %s[%d]: ",
         $self->[PRIORITY], $timestr, $self->[SENDER], $self->[NAME], $self->[PID];
-	if ($self->[FORMAT] == LOG_RFC5424) {
-		$self->[PREFIX] = sprintf "<%d>1 %s %s %s %d - - ",
-			$self->[PRIORITY], $timestr, $self->[SENDER], $self->[NAME], $self->[PID];
-	}
+    if ($self->[FORMAT] == LOG_RFC5424) {
+        $self->[PREFIX] = sprintf "<%d>1 %s %s %s %d - - ",
+            $self->[PRIORITY], $timestr, $self->[SENDER], $self->[NAME], $self->[PID];
+    }
 }
 
 sub set_receiver {

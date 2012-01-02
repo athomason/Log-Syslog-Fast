@@ -13,7 +13,7 @@ typedef struct {
     char*  sender;          /* sender hostname */
     char*  name;            /* sending program name */
     int    pid;             /* sending program pid */
-	int	   format;			/* RFC3164 or RFC5424 */
+    int    format;          /* RFC3164 or RFC5424 */
 
     /* resource handles */
     int    sock;            /* socket fd */

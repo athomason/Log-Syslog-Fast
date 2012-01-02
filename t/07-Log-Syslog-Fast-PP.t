@@ -209,8 +209,8 @@ for my $p (sort keys %servers) {
         eval { $logger->set_pid(12345) };
         ok(!$@, "$p: ->set_pid doesn't throw");
 
-		eval { $logger->set_format(LOG_RFC5424) };
-		ok(!$@, "$p: ->set_format doesn't throw");
+        eval { $logger->set_format(LOG_RFC5424) };
+        ok(!$@, "$p: ->set_format doesn't throw");
 
         my $receiver = $server->accept;
 
@@ -271,13 +271,13 @@ like($@, qr{at t/07-Log-Syslog-Fast-PP.t}, 'error in caller'); # not Fast.pm
 
 sub expected_payload {
     my ($facility, $severity, $sender, $name, $pid, $msg, $time, $format) = @_;
-	my $time_format = "%h %e %T";
-	my $msg_format = "<%d>%s %s %s[%d]: %s";
+    my $time_format = "%h %e %T";
+    my $msg_format = "<%d>%s %s %s[%d]: %s";
 
-	if ($format == LOG_RFC5424) {
-		$time_format = "%Y-%m-%dT%H:%M:%S%z";
-		$msg_format = "<%d>1 %s %s %s %d - - %s";
-	}
+    if ($format == LOG_RFC5424) {
+        $time_format = "%Y-%m-%dT%H:%M:%S%z";
+        $msg_format = "<%d>1 %s %s %s %d - - %s";
+    }
 
     return sprintf $msg_format,
         ($facility << 3) | $severity,
