@@ -14,14 +14,20 @@ use constant LOG_UDP    => 0; # UDP
 use constant LOG_TCP    => 1; # TCP
 use constant LOG_UNIX   => 2; # UNIX socket
 
+# format
+use constant LOG_RFC3164 => 0;
+use constant LOG_RFC5424 => 1;
+
 use POSIX 'strftime';
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
+    formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
 );
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
+push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'formats'} };
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
@@ -33,6 +39,8 @@ use constant PID        => 3;
 use constant SOCK       => 4;
 use constant LAST_TIME  => 5;
 use constant PREFIX     => 6;
+use constant PREFIX_LEN => 7;
+use constant FORMAT     => 8;
 
 sub new {
     my $ref = shift;
@@ -49,6 +57,7 @@ sub new {
         undef, # last_time
         undef, # prefix
         undef, # prefix_len
+        LOG_RFC3164, # format
     ], $class;
 
     $self->update_prefix(time());
@@ -65,8 +74,16 @@ sub update_prefix {
     $self->[LAST_TIME] = $t;
 
     my $timestr = strftime("%h %e %T", localtime $t);
+    if ($self->[FORMAT] == LOG_RFC5424) {
+        $timestr = strftime("%Y-%m-%dT%H:%M:%S%z", localtime $t);
+    }
+
     $self->[PREFIX] = sprintf "<%d>%s %s %s[%d]: ",
         $self->[PRIORITY], $timestr, $self->[SENDER], $self->[NAME], $self->[PID];
+    if ($self->[FORMAT] == LOG_RFC5424) {
+        $self->[PREFIX] = sprintf "<%d>1 %s %s %s %d - - ",
+            $self->[PRIORITY], $timestr, $self->[SENDER], $self->[NAME], $self->[PID];
+    }
 }
 
 sub set_receiver {
@@ -140,6 +157,12 @@ sub set_pid {
     $self->update_prefix(time);
 }
 
+sub set_format {
+    my $self = shift;
+    $self->[FORMAT] = shift;
+    $self->update_prefix(time);
+}
+
 sub send {
     my $now = $_[2] || time;
 
@@ -179,6 +202,11 @@ sub get_name {
 sub get_pid {
     my $self = shift;
     return $self->[PID];
+}
+
+sub get_format {
+    my $self = shift;
+    return $self->[FORMAT];
 }
 
 1;

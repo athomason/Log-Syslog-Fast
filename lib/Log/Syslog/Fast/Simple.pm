@@ -24,6 +24,7 @@ use constant _FACILITY  => 3;
 use constant _SEVERITY  => 4;
 use constant _SENDER    => 5;
 use constant _NAME      => 6;
+use constant _FORMAT    => 7;
 
 sub new {
     my $what = shift;
@@ -42,11 +43,12 @@ sub new {
     $args->{severity}   ||= LOG_INFO;
     $args->{sender}     ||= Sys::Hostname::hostname;
     $args->{name}       ||= $default_name;
+    $args->{format}     ||= LOG_RFC3164;
 
     return bless [
         [],    # loggers
         [@{ $args }{qw/
-            proto hostname port facility severity sender name
+            proto hostname port facility severity sender name format
         /}],
     ], $class;
 }
@@ -61,7 +63,9 @@ sub send {
         $args[_FACILITY] = $facility;
         $args[_SEVERITY] = $severity;
 
+        my $format = pop(@args);
         $logger = $_[0][_LOGGERS][$facility][$severity] = Log::Syslog::Fast->new(@args);
+        $logger->set_format($format);
     }
 
     return $logger->send($_[1], $_[2] || time);
