@@ -3,6 +3,9 @@
 
 #include <time.h>
 
+#define LOG_RFC3164 0
+#define LOG_RFC5424 1
+
 typedef struct {
 
     /* configuration */
@@ -10,6 +13,7 @@ typedef struct {
     char*  sender;          /* sender hostname */
     char*  name;            /* sending program name */
     int    pid;             /* sending program pid */
+    int    format;          /* RFC3164 or RFC5424 */
 
     /* resource handles */
     int    sock;            /* socket fd */
@@ -38,6 +42,7 @@ void LSF_set_severity(LogSyslogFast* logger, int severity);
 int LSF_set_sender(LogSyslogFast* logger, const char* sender);
 int LSF_set_name(LogSyslogFast* logger, const char* name);
 void LSF_set_pid(LogSyslogFast* logger, int pid);
+void LSF_set_format(LogSyslogFast* logger, int format);
 
 int LSF_get_priority(LogSyslogFast* logger);
 int LSF_get_facility(LogSyslogFast* logger);
@@ -45,6 +50,7 @@ int LSF_get_severity(LogSyslogFast* logger);
 const char* LSF_get_sender(LogSyslogFast* logger);
 const char* LSF_get_name(LogSyslogFast* logger);
 int LSF_get_pid(LogSyslogFast* logger);
+int LSF_get_format(LogSyslogFast* logger);
 
 int LSF_get_sock(LogSyslogFast* logger);
 

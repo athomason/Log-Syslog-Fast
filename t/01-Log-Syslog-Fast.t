@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 142;
+use Test::More tests => 206;
 use File::Temp 'tempdir';
 use IO::Select;
 use IO::Socket::INET;
@@ -11,7 +11,7 @@ use POSIX 'strftime';
 
 require 't/lib/LSFServer.pm';
 
-use Log::Syslog::Fast ':protos';
+use Log::Syslog::Fast qw(:protos :formats);
 
 my $test_dir = tempdir(CLEANUP => 1);
 
@@ -109,7 +109,7 @@ for my $p (sort keys %servers) {
             my ($msg, @extra) = @$config;
 
             my @payload_params = (@params, $$, $msg, $time);
-            my $expected = expected_payload(@payload_params);
+            my $expected = expected_payload(@payload_params, LOG_RFC3164);
 
             my $sent = eval { $logger->send($msg, @extra) };
             ok(!$@, "$p: ->send $msg doesn't throw");
@@ -123,7 +123,7 @@ for my $p (sort keys %servers) {
 
                 ok($buf =~ /^<38>/, "$p: ->send $msg has the right priority");
                 ok($buf =~ /$msg$/, "$p: ->send $msg has the right message");
-                ok(payload_ok($buf, @payload_params), "$p: ->send $msg has correct payload");
+                ok(payload_ok($buf, LOG_RFC3164, @payload_params), "$p: ->send $msg has correct payload");
             }
         }
     };
@@ -160,7 +160,7 @@ for my $p (sort keys %servers) {
 
         my $msg = "testing 3";
         my @payload_params = (LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg, time);
-        my $expected = expected_payload(@payload_params);
+        my $expected = expected_payload(@payload_params, LOG_RFC3164);
 
         my $sent = eval { $logger->send($msg) };
         ok(!$@, "$p: ->send after accessors doesn't throw");
@@ -177,7 +177,63 @@ for my $p (sort keys %servers) {
             ok($buf =~ /test2\[/, "$p: ->send after set_name has the right name");
             ok($buf =~ /\[12345\]/, "$p: ->send after set_name has the right pid");
             ok($buf =~ /$msg$/, "$p: ->send after accessors sends right message");
-            ok(payload_ok($buf, @payload_params), "$p: ->send $msg has correct payload");
+            ok(payload_ok($buf, LOG_RFC3164, @payload_params), "$p: ->send $msg has correct payload");
+        }
+    };
+    diag($@) if $@;
+
+    # RFC5424 format
+    eval {
+
+        my $server = $listen->();
+        my $logger = $server->connect('Log::Syslog::Fast' => @params);
+
+        # ignore first connection for stream protos since reconnect is expected
+        $server->accept();
+
+        eval {
+            # this method triggers a reconnect for stream protocols
+            $logger->set_receiver($server->proto, $server->address);
+        };
+        ok(!$@, "$p: ->set_receiver doesn't throw");
+
+        eval { $logger->set_priority(LOG_NEWS, LOG_CRIT) };
+        ok(!$@, "$p: ->set_priority doesn't throw");
+
+        eval { $logger->set_sender('otherhost') };
+        ok(!$@, "$p: ->set_sender doesn't throw");
+
+        eval { $logger->set_name('test2') };
+        ok(!$@, "$p: ->set_name doesn't throw");
+
+        eval { $logger->set_pid(12345) };
+        ok(!$@, "$p: ->set_pid doesn't throw");
+
+        eval { $logger->set_format(LOG_RFC5424) };
+        ok(!$@, "$p: ->set_format doesn't throw");
+
+        my $receiver = $server->accept;
+
+        my $msg = "testing 3";
+        my @payload_params = (LOG_NEWS, LOG_CRIT, 'otherhost', 'test2', 12345, $msg, time);
+        my $expected = expected_payload(@payload_params, LOG_RFC5424);
+
+        my $sent = eval { $logger->send($msg) };
+        ok(!$@, "$p: ->send after accessors doesn't throw");
+        is($sent, length $expected, "$p: ->send sent whole payload");
+
+        my $found = wait_for_readable($receiver);
+        ok($found, "$p: didn't time out while listening");
+
+        if ($found) {
+            $receiver->recv(my $buf, 256);
+            ok($buf, "$p: send after set_receiver went to correct port");
+            ok($buf =~ /^<58>1/, "$p: ->send after set_priority has the right priority");
+            ok($buf =~ / otherhost /, "$p: ->send after set_sender has the right sender");
+            ok($buf =~ / test2 /, "$p: ->send after set_name has the right name");
+            ok($buf =~ / 12345 /, "$p: ->send after set_name has the right pid");
+            ok($buf =~ / $msg$/, "$p: ->send after accessors sends right message");
+            ok(payload_ok($buf, LOG_RFC5424, @payload_params), "$p: ->send $msg has correct payload");
         }
     };
     diag($@) if $@;
@@ -270,26 +326,28 @@ eval {
 like($@, qr{at t/01-Log-Syslog-Fast.t}, 'error in caller'); # not Fast.pm
 
 sub expected_payload {
-    my ($facility, $severity, $sender, $name, $pid, $msg, $time) = @_;
-    return sprintf "<%d>%s %s %s[%d]: %s",
+    my ($facility, $severity, $sender, $name, $pid, $msg, $time, $format) = @_;
+    my $time_format = "%h %e %T";
+    my $msg_format = "<%d>%s %s %s[%d]: %s";
+
+    if ($format == LOG_RFC5424) {
+        $time_format = "%Y-%m-%dT%H:%M:%S%z";
+        $msg_format = "<%d>1 %s %s %s %d - - %s";
+    }
+
+    return sprintf $msg_format,
         ($facility << 3) | $severity,
-        strftime("%h %e %T", localtime($time)),
+        strftime($time_format, localtime($time)),
         $sender, $name, $pid, $msg;
 }
 
 sub payload_ok {
-    my ($payload, @payload_params) = @_;
+    my ($payload, $format, @payload_params) = @_;
     for my $offset (0, -1, 1) {
-        my $allowed = expected_payload(@payload_params);
+        my $allowed = expected_payload(@payload_params, $format);
         return 1 if $allowed eq $payload;
     }
     return 0;
-}
-
-sub allowed_payloads {
-    my @params = @_;
-    my $time = pop @params;
-    return map { expected_payload(@params, $time + $_) } (-1, 0, 1);
 }
 
 # use select so test won't block on failure

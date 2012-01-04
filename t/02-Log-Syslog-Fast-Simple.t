@@ -13,6 +13,7 @@ my $logger = Log::Syslog::Fast::Simple->new(
     severity => LOG_DEBUG,
     sender   => 'mymachine',
     name     => 'test',
+    format   => LOG_RFC3164,
 );
 ok($logger, "->new returns something");
 

@@ -20,16 +20,26 @@ update_prefix(LogSyslogFast* logger, time_t t)
 {
     logger->last_time = t;
 
-    char timestr[30];
-    strftime(timestr, 30, "%h %e %T", localtime(&t));
+    char timestr[40];
+    const char *time_format = "%h %e %T";
+    if (logger->format == LOG_RFC5424) {
+        time_format = "%Y-%m-%dT%H:%M:%S%z";
+    }
+
+    strftime(timestr, 40, time_format, localtime(&t));
 
     if (!logger->sender || !logger->name)
         return; /* still initializing */
 
+    const char *msg_format = "<%d>%s %s %s[%d]: ";
+    if (logger->format == LOG_RFC5424) {
+        msg_format = "<%d>1 %s %s %s %d - - ";
+    }
     logger->prefix_len = snprintf(logger->linebuf, logger->bufsize,
-        "<%d>%s %s %s[%d]: ",
+        msg_format,
         logger->priority, timestr, logger->sender, logger->name, logger->pid
     );
+
     if (logger->prefix_len > logger->bufsize - 1)
         logger->prefix_len = logger->bufsize - 1;
 
@@ -63,6 +73,7 @@ LSF_init(
 
     logger->sender = NULL;
     logger->name = NULL;
+    logger->format = LOG_RFC3164;
     LSF_set_sender(logger, sender);
     LSF_set_name(logger, name);
 
@@ -134,6 +145,13 @@ void
 LSF_set_pid(LogSyslogFast* logger, int pid)
 {
     logger->pid = pid;
+    update_prefix(logger, time(0));
+}
+
+void
+LSF_set_format(LogSyslogFast* logger, int format)
+{
+    logger->format = format;
     update_prefix(logger, time(0));
 }
 
@@ -381,4 +399,10 @@ int
 LSF_get_sock(LogSyslogFast* logger)
 {
     return logger->sock;
+}
+
+int
+LSF_get_format(LogSyslogFast* logger)
+{
+    return logger->format;
 }
