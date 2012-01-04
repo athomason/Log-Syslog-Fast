@@ -18,25 +18,17 @@ static
 void
 update_prefix(LogSyslogFast* logger, time_t t)
 {
-    logger->last_time = t;
-
-    char timestr[40];
-    const char *time_format = "%h %e %T";
-    if (logger->format == LOG_RFC5424) {
-        time_format = "%Y-%m-%dT%H:%M:%S%z";
-    }
-
-    strftime(timestr, 40, time_format, localtime(&t));
-
     if (!logger->sender || !logger->name)
         return; /* still initializing */
 
-    const char *msg_format = "<%d>%s %s %s[%d]: ";
-    if (logger->format == LOG_RFC5424) {
-        msg_format = "<%d>1 %s %s %s %d - - ";
-    }
-    logger->prefix_len = snprintf(logger->linebuf, logger->bufsize,
-        msg_format,
+    logger->last_time = t;
+
+    /* LOG_RFC3164 time string tops out at 15 chars, LOG_RFC5424 at 24 */
+    char timestr[25];
+    strftime(timestr, 25, logger->time_format, localtime(&t));
+
+    logger->prefix_len = snprintf(
+        logger->linebuf, logger->bufsize, logger->msg_format,
         logger->priority, timestr, logger->sender, logger->name, logger->pid
     );
 
@@ -73,7 +65,7 @@ LSF_init(
 
     logger->sender = NULL;
     logger->name = NULL;
-    logger->format = LOG_RFC3164;
+    LSF_set_format(logger, LOG_RFC3164);
     LSF_set_sender(logger, sender);
     LSF_set_name(logger, name);
 
@@ -148,11 +140,59 @@ LSF_set_pid(LogSyslogFast* logger, int pid)
     update_prefix(logger, time(0));
 }
 
-void
+int
 LSF_set_format(LogSyslogFast* logger, int format)
 {
     logger->format = format;
+
+    /* msg_format must contain format strings for:
+       1) priority (int)
+       2) timestamp (string)
+       3) hostname (string)
+       4) app name (string)
+       5) pid (int)
+    */
+    if (logger->format == LOG_RFC3164) {
+        /*
+           'The TIMESTAMP field is the local time and is in the format of
+           "Mmm dd hh:mm:ss"'
+
+            Example: "Jan  4 11:22:33"
+        */
+        logger->time_format = "%h %e %H:%M:%S";
+        logger->msg_format = "<%d>%s %s %s[%d]: ";
+    }
+    else if (logger->format == LOG_RFC5424) {
+        /*
+            TIMESTAMP       = NILVALUE / FULL-DATE "T" FULL-TIME
+            FULL-DATE       = DATE-FULLYEAR "-" DATE-MONTH "-" DATE-MDAY
+            DATE-FULLYEAR   = 4DIGIT
+            DATE-MONTH      = 2DIGIT  ; 01-12
+            DATE-MDAY       = 2DIGIT  ; 01-28, 01-29, 01-30, 01-31 based on
+                                        ; month/year
+            FULL-TIME       = PARTIAL-TIME TIME-OFFSET
+            PARTIAL-TIME    = TIME-HOUR ":" TIME-MINUTE ":" TIME-SECOND
+                                [TIME-SECFRAC]
+            TIME-HOUR       = 2DIGIT  ; 00-23
+            TIME-MINUTE     = 2DIGIT  ; 00-59
+            TIME-SECOND     = 2DIGIT  ; 00-59
+            TIME-SECFRAC    = "." 1*6DIGIT
+            TIME-OFFSET     = "Z" / TIME-NUMOFFSET
+            TIME-NUMOFFSET  = ("+" / "-") TIME-HOUR ":" TIME-MINUTE
+
+            Example: "2012-01-04T11:22:33-0800"
+        */
+        logger->time_format = "%Y-%m-%dT%H:%M:%S%z";
+
+        /* STRUCTURED-DATA and MSGID fields are omitted */
+        logger->msg_format = "<%d>1 %s %s %s %d - - ";
+    }
+    else {
+        logger->err = "invalid format constant";
+        return -1;
+    }
     update_prefix(logger, time(0));
+    return 0;
 }
 
 #ifdef AF_INET6

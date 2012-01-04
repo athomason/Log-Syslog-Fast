@@ -133,7 +133,9 @@ set_format(logger, format)
 ALIAS:
     setFormat = 1
 CODE:
-    LSF_set_format(logger, format);
+    int ret = LSF_set_format(logger, format);
+    if (ret < 0)
+        croak("Error in set_format: %s", logger->err);
 
 int
 get_priority(logger)

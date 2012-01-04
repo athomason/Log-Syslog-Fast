@@ -9,24 +9,26 @@
 typedef struct {
 
     /* configuration */
-    int    priority;        /* RFC3164/4.1.1 PRI Part */
-    char*  sender;          /* sender hostname */
-    char*  name;            /* sending program name */
-    int    pid;             /* sending program pid */
-    int    format;          /* RFC3164 or RFC5424 */
+    int    priority;            /* RFC3164/4.1.1 PRI Part */
+    char*  sender;              /* sender hostname */
+    char*  name;                /* sending program name */
+    int    pid;                 /* sending program pid */
+    int    format;              /* RFC3164 or RFC5424 */
 
     /* resource handles */
-    int    sock;            /* socket fd */
+    int    sock;                /* socket fd */
 
     /* internal state */
-    time_t last_time;       /* time when the prefix was last generated */
-    char*  linebuf;         /* log line, including prefix and message */
-    int    bufsize;         /* current size of linebuf */
-    size_t prefix_len;      /* length of the prefix string */
-    char*  msg_start;       /* pointer into linebuf after end of prefix */
+    time_t last_time;           /* time when the prefix was last generated */
+    char*  linebuf;             /* log line, including prefix and message */
+    int    bufsize;             /* current size of linebuf */
+    size_t prefix_len;          /* length of the prefix string */
+    char*  msg_start;           /* pointer into linebuf after end of prefix */
+    const char* time_format;    /* strftime format string */
+    const char* msg_format;     /* snprintf format string */
 
     /* error reporting */
-    const char* err;        /* error string */
+    const char* err;            /* error string */
 
 } LogSyslogFast;
 
@@ -42,7 +44,7 @@ void LSF_set_severity(LogSyslogFast* logger, int severity);
 int LSF_set_sender(LogSyslogFast* logger, const char* sender);
 int LSF_set_name(LogSyslogFast* logger, const char* name);
 void LSF_set_pid(LogSyslogFast* logger, int pid);
-void LSF_set_format(LogSyslogFast* logger, int format);
+int LSF_set_format(LogSyslogFast* logger, int format);
 
 int LSF_get_priority(LogSyslogFast* logger);
 int LSF_get_facility(LogSyslogFast* logger);
