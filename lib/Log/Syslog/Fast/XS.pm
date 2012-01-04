@@ -8,7 +8,7 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.57';
+our $VERSION = '0.58';
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast::XS', $VERSION);

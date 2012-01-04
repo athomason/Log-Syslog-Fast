@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.58   Wed Jan  4 11:58:35 PST 2012
+        - Add support for messages formatted according to RFC5424. Thanks Ryan
+          P. Kelly.
 0.57   Thu Dec 29 11:49:30 PST 2011
         - Fix fd leak when reconnecting. Thanks maxs@.
 0.56   Sat Nov  5 19:44:36 PDT 2011
