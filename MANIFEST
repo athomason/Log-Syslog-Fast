@@ -18,7 +18,6 @@ t/lib/LSFServer.pm
 lib/Log/Syslog/Fast.pm
 lib/Log/Syslog/Fast/PP.pm
 lib/Log/Syslog/Fast/Simple.pm
-lib/Log/Syslog/Fast/XS.pm
 LogSyslogFast.c
 LogSyslogFast.h
 META.yml                                 Module meta-data (added by MakeMaker)
