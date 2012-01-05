@@ -57,7 +57,7 @@ for my $bench (@benchable) {
 
     my $script = "$Bin/bench-sizes.pl";
 
-    my @classes = 'Log::Syslog::Fast';
+    my @classes = ('Log::Syslog::Fast');
     push @classes, 'Log::Syslog::Fast::PP' if -e 'blib/lib/Log/Syslog/Fast/PP.pm';
 
     for my $class (@classes) {
@@ -66,7 +66,7 @@ for my $bench (@benchable) {
         $verbose && print "$_\n" for @results;
         for (@results) {
             if (m{(\d+)[^@]+@ ([0-9.]+)/s}) {
-                $results{$class}{$name}{$1} = $2;
+                $results{$class}{$name}{sprintf "%4d", $1} = 0+$2;
             }
         }
     }

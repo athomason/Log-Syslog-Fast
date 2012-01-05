@@ -32,7 +32,13 @@ for my $size (0, 10, 50, 100, 500, 1000, 5000) {
         'benchmark',
     );
 
-    $loggers{sprintf '%4d', $size} = sub { $logger->send($msg) };
+    my $n = 0;
+    $loggers{sprintf '%4d', $size} = sub {
+        if ($n++ % 1000 == 0) {
+            $logger->set_pid($$);
+        }
+        $logger->send($msg);
+    };
 }
 
 timethese(-$seconds, \%loggers);
