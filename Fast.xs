@@ -25,6 +25,12 @@ new(class, proto, hostname, port, facility, severity, sender, name)
     char* sender
     char* name
 CODE:
+    if (!hostname)
+        croak("hostname required");
+    if (!sender)
+        croak("sender required");
+    if (!name)
+        croak("name required");
     RETVAL = LSF_alloc();
     if (!RETVAL)
         croak("Error in ->new: malloc failed");
@@ -67,6 +73,8 @@ set_receiver(logger, proto, hostname, port)
 ALIAS:
     setReceiver = 1
 CODE:
+    if (!hostname)
+        croak("hostname required");
     int ret = LSF_set_receiver(logger, proto, hostname, port);
     if (ret < 0)
         croak("Error in set_receiver: %s", logger->err);
@@ -102,6 +110,8 @@ set_sender(logger, sender)
 ALIAS:
     setSender = 1
 CODE:
+    if (!sender)
+        croak("sender required");
     int ret = LSF_set_sender(logger, sender);
     if (ret < 0)
         croak("Error in set_sender: %s", logger->err);
@@ -113,6 +123,8 @@ set_name(logger, name)
 ALIAS:
     setName = 1
 CODE:
+    if (!name)
+        croak("name required");
     int ret = LSF_set_name(logger, name);
     if (ret < 0)
         croak("Error in set_name: %s", logger->err);

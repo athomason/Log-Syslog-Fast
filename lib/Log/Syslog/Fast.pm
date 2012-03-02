@@ -8,7 +8,7 @@ require Exporter;
 use Log::Syslog::Constants ();
 use Carp 'croak';
 
-our $VERSION = '0.58';
+our $VERSION = '0.59';
 
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
@@ -100,7 +100,8 @@ For LOG_UNIX, the path to the UNIX socket where syslogd is listening (typically
 =item $port
 
 For LOG_TCP and LOG_UDP, the destination port where a syslogd is listening,
-usually 514. Ignored for LOG_UNIX.
+usually 514. Unused for LOG_UNIX, but should not be undefined or a warning will
+be emitted under strict.
 
 =item $facility
 

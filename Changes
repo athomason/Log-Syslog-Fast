@@ -1,4 +1,9 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.59   Fri Mar  2 14:11:49 PST 2012
+        - Complain instead of crash when string parameters are undefined.
+          Thanks Pawl Pabian.
+        - Clarify documentation of how $port is used for LOG_UNIX. Also Thanks
+          Pawl Pabian.
 0.58   Wed Jan  4 11:58:35 PST 2012
         - Add support for messages formatted according to RFC5424. Thanks Ryan
           P. Kelly.

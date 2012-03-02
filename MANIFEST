@@ -14,6 +14,7 @@ t/05-ipv6.t
 t/06-large-strings.t
 t/07-Log-Syslog-Fast-PP.t
 t/08-fd-leak.t
+t/09-undef-strings.t
 t/lib/LSFServer.pm
 lib/Log/Syslog/Fast.pm
 lib/Log/Syslog/Fast/PP.pm
