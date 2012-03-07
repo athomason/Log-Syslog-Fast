@@ -343,6 +343,13 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, const char* hostname, int por
     if (connect(logger->sock, p_address, address_len) != 0) {
         /* some servers (rsyslog) may use SOCK_DGRAM for unix domain sockets */
         if (proto == LOG_UNIX && errno == EPROTOTYPE) {
+            /* clean up existing bad socket */
+            close(logger->sock);
+            if (logger->sock < 0) {
+                logger->err = strerror(errno);
+                clean_return(-1);
+            }
+
             logger->sock = socket(AF_UNIX, SOCK_DGRAM, 0);
             if (connect(logger->sock, p_address, address_len) != 0) {
                 logger->err = strerror(errno);

@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.60   Tue Mar  6 18:00:32 PST 2012
+        - Clean up after failed AF_UNIX+SOCK_STREAM socket creation.
+          Thanks Pawl Pabian.
 0.59   Fri Mar  2 14:11:49 PST 2012
         - Complain instead of crash when string parameters are undefined.
           Thanks Pawl Pabian.
