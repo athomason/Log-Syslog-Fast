@@ -259,8 +259,12 @@ LSF_set_receiver(LogSyslogFast* logger, int proto, const char* hostname, int por
         hints.ai_next = NULL;
 
         r = getaddrinfo(hostname, portstr, &hints, &results);
-        if (r < 0 || !results) {
-            logger->err = "getaddrinfo failure";
+        if (r < 0) {
+            logger->err = gai_strerror(r);
+            return -1;
+        }
+        else if (!results) {
+            logger->err = "no results from getaddrinfo";
             return -1;
         }
         for (rp = results; rp != NULL; rp = rp->ai_next) {

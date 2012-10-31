@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.61   Wed Oct 31 16:41:12 PDT 2012
+        - Return a descriptive error on getaddrinfo failure.
 0.60   Tue Mar  6 18:00:32 PST 2012
         - Clean up after failed AF_UNIX+SOCK_STREAM socket creation.
           Thanks Pawl Pabian.
