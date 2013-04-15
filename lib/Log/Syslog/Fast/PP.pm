@@ -11,7 +11,7 @@ use Carp qw(croak confess cluck);
 our @ISA = qw(Log::Syslog::Constants Exporter);
 
 use POSIX 'strftime';
-use IO::Socket::INET;
+use IO::Socket::IP;
 use IO::Socket::UNIX;
 use Socket;
 
@@ -112,14 +112,14 @@ sub set_receiver {
     my ($proto, $hostname, $port) = @_;
 
     if ($proto == LOG_TCP) {
-        $self->[SOCK] = IO::Socket::INET->new(
+        $self->[SOCK] = IO::Socket::IP->new(
             Proto    => 'tcp',
             PeerHost => $hostname,
             PeerPort => $port,
         );
     }
     elsif ($proto == LOG_UDP) {
-        $self->[SOCK] = IO::Socket::INET->new(
+        $self->[SOCK] = IO::Socket::IP->new(
             Proto    => 'udp',
             PeerHost => $hostname,
             PeerPort => $port,
