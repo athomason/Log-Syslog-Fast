@@ -6,6 +6,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Log/Syslog/Fast.pm', # finds $VERSION
     PREREQ_PM         => {
         'Log::Syslog::Constants'    => 1.01,
+        'IO::Socket::IP'            => 0.19,
     },
     ABSTRACT_FROM     => 'lib/Log/Syslog/Fast.pm',
     AUTHOR            => 'Adam Thomason <athomason@cpan.org>',

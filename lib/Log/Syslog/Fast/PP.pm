@@ -5,32 +5,45 @@ use strict;
 use warnings;
 
 require Exporter;
-use Carp 'croak';
+use Log::Syslog::Constants ();
+use Carp qw(croak confess cluck);
 
-our @ISA = qw(Exporter);
+our @ISA = qw(Log::Syslog::Constants Exporter);
+
+use POSIX 'strftime';
+use IO::Socket::IP;
+use IO::Socket::UNIX;
+use Socket;
 
 # protocols
 use constant LOG_UDP    => 0; # UDP
 use constant LOG_TCP    => 1; # TCP
 use constant LOG_UNIX   => 2; # UNIX socket
 
-# format
+# formats
 use constant LOG_RFC3164 => 0;
 use constant LOG_RFC5424 => 1;
-
-use POSIX 'strftime';
-use IO::Socket::INET;
-use IO::Socket::UNIX;
 
 our %EXPORT_TAGS = (
     protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
     formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
+    %Log::Syslog::Constants::EXPORT_TAGS,
 );
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
 push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'formats'} };
 
 our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
 our @EXPORT = qw();
+
+sub DESTROY { }
+
+sub AUTOLOAD {
+    (my $meth = our $AUTOLOAD) =~ s/.*:://;
+    if (Log::Syslog::Constants->can($meth)) {
+        return Log::Syslog::Constants->$meth(@_);
+    }
+    croak "Undefined subroutine $AUTOLOAD";
+}
 
 use constant PRIORITY   => 0;
 use constant SENDER     => 1;
@@ -43,10 +56,16 @@ use constant PREFIX_LEN => 7;
 use constant FORMAT     => 8;
 
 sub new {
+    $_[0] = __PACKAGE__ unless defined $_[0];
+
     my $ref = shift;
     my $class = ref $ref || $ref;
 
     my ($proto, $hostname, $port, $facility, $severity, $sender, $name) = @_;
+
+    croak "hostname required" unless defined $hostname;
+    croak "sender required"   unless defined $sender;
+    croak "name required"     unless defined $name;
 
     my $self = bless [
         ($facility << 3) | $severity, # prio
@@ -62,8 +81,8 @@ sub new {
 
     $self->update_prefix(time());
 
-    $self->set_receiver($proto, $hostname, $port);
-
+    eval { $self->set_receiver($proto, $hostname, $port) };
+    die "Error in ->new: $@" if $@;
     return $self;
 }
 
@@ -88,17 +107,19 @@ sub update_prefix {
 
 sub set_receiver {
     my $self = shift;
+    croak("hostname required") unless defined $_[1];
+    
     my ($proto, $hostname, $port) = @_;
 
     if ($proto == LOG_TCP) {
-        $self->[SOCK] = IO::Socket::INET->new(
+        $self->[SOCK] = IO::Socket::IP->new(
             Proto    => 'tcp',
             PeerHost => $hostname,
             PeerPort => $port,
         );
     }
     elsif ($proto == LOG_UDP) {
-        $self->[SOCK] = IO::Socket::INET->new(
+        $self->[SOCK] = IO::Socket::IP->new(
             Proto    => 'udp',
             PeerHost => $hostname,
             PeerPort => $port,
@@ -141,12 +162,14 @@ sub set_severity {
 
 sub set_sender {
     my $self = shift;
+    croak("sender required") unless defined $_[0];
     $self->[SENDER] = shift;
     $self->update_prefix(time);
 }
 
 sub set_name {
     my $self = shift;
+    croak("name required") unless defined $_[0];
     $self->[NAME] = shift;
     $self->update_prefix(time);
 }
@@ -171,8 +194,10 @@ sub send {
         $_[0]->update_prefix($now);
     }
 
-    send $_[0][SOCK], $_[0][PREFIX] . $_[1], 0;
+    send($_[0][SOCK], $_[0][PREFIX] . $_[1], 0) || die "Error while sending: $!";
 }
+
+#no warnings 'redefine';
 
 sub get_priority {
     my $self = shift;
@@ -207,6 +232,11 @@ sub get_pid {
 sub get_format {
     my $self = shift;
     return $self->[FORMAT];
+}
+
+sub _get_sock {
+    my $self = shift;
+    return $self->[SOCK]->fileno;
 }
 
 1;
