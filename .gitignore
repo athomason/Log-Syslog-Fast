@@ -12,3 +12,4 @@ MYMETA.*
 *.o
 *.old
 Fast.c
+const-*.inc
