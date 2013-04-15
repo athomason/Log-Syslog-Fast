@@ -236,7 +236,7 @@ sub get_format {
 
 sub _get_sock {
     my $self = shift;
-    return $self->[SOCK];
+    return $self->[SOCK]->fileno;
 }
 
 1;
