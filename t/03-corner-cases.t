@@ -1,14 +1,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
-
-use IO::Socket::INET;
+our $CLASS = 'Log::Syslog::Fast';
 use Log::Syslog::Fast ':all';
 
-eval {
-    Log::Syslog::Fast->new(LOG_UNIX, 'a' x 10000, 0, LOG_LOCAL0, LOG_INFO, "mymachine", "logger");
-};
-like($@, qr/^Error in ->new/, "long filename");
+require 't/03-corner-cases.pl';
 
-# vim: filetype=perl
