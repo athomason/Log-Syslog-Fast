@@ -108,7 +108,7 @@ sub update_prefix {
 sub set_receiver {
     my $self = shift;
     croak("hostname required") unless defined $_[1];
-    
+
     my ($proto, $hostname, $port) = @_;
 
     if ($proto == LOG_TCP) {
