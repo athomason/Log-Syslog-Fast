@@ -128,13 +128,13 @@ sub set_receiver {
     elsif ($proto == LOG_UNIX) {
         eval {
             $self->[SOCK] = IO::Socket::UNIX->new(
-                Proto => SOCK_STREAM,
+                Type => SOCK_STREAM,
                 Peer  => $hostname,
             );
         };
         if ($@ || !$self->[SOCK]) {
             $self->[SOCK] = IO::Socket::UNIX->new(
-                Proto => SOCK_DGRAM,
+                Type => SOCK_DGRAM,
                 Peer  => $hostname,
             );
         }
