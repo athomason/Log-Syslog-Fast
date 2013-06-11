@@ -4,46 +4,20 @@ use 5.006002;
 use strict;
 use warnings;
 
+use Log::Syslog::Fast::Constants ':all';
 require Exporter;
-use Log::Syslog::Constants ();
-use Carp qw(croak confess cluck);
+our @ISA = qw(Exporter);
+our @EXPORT = qw();
+our %EXPORT_TAGS = %Log::Syslog::Fast::Constants::EXPORT_TAGS;
+our @EXPORT_OK = @Log::Syslog::Fast::Constants::EXPORT_OK;
 
-our @ISA = qw(Log::Syslog::Constants Exporter);
-
+use Carp;
 use POSIX 'strftime';
 use IO::Socket::IP;
 use IO::Socket::UNIX;
 use Socket;
 
-# protocols
-use constant LOG_UDP    => 0; # UDP
-use constant LOG_TCP    => 1; # TCP
-use constant LOG_UNIX   => 2; # UNIX socket
-
-# formats
-use constant LOG_RFC3164 => 0;
-use constant LOG_RFC5424 => 1;
-
-our %EXPORT_TAGS = (
-    protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
-    formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
-    %Log::Syslog::Constants::EXPORT_TAGS,
-);
-push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
-push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'formats'} };
-
-our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
-our @EXPORT = qw();
-
 sub DESTROY { }
-
-sub AUTOLOAD {
-    (my $meth = our $AUTOLOAD) =~ s/.*:://;
-    if (Log::Syslog::Constants->can($meth)) {
-        return Log::Syslog::Constants->$meth(@_);
-    }
-    croak "Undefined subroutine $AUTOLOAD";
-}
 
 use constant PRIORITY   => 0;
 use constant SENDER     => 1;
@@ -129,13 +103,13 @@ sub set_receiver {
         eval {
             $self->[SOCK] = IO::Socket::UNIX->new(
                 Type => SOCK_STREAM,
-                Peer  => $hostname,
+                Peer => $hostname,
             );
         };
         if ($@ || !$self->[SOCK]) {
             $self->[SOCK] = IO::Socket::UNIX->new(
                 Type => SOCK_DGRAM,
-                Peer  => $hostname,
+                Peer => $hostname,
             );
         }
     }

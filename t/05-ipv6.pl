@@ -1,19 +1,11 @@
 use Test::More tests => 73;
-use File::Temp 'tempdir';
 use IO::Select;
 use IO::Socket::INET;
 
 use POSIX 'strftime';
 
-require 't/lib/LSFServer.pm';
-
-my $test_dir = tempdir(CLEANUP => 1);
-
-sub listen_port {
-    return 0;
-}
-
-my %servers;
+use lib 't/lib';
+use LSF;
 
 eval 'local $^W = 0; use IO::Socket::INET6;';
 
@@ -21,7 +13,6 @@ SKIP: {
     if ($@) {
         skip 'Cannot run IPv6 tests without IO::Socket::INET6', 73;
     }
-
 
 %servers = (
     tcp => sub {
@@ -98,7 +89,7 @@ for my $p (sort keys %servers) {
 
                 ok($buf =~ /^<38>/, "$p: ->send $msg has the right priority");
                 ok($buf =~ /$msg$/, "$p: ->send $msg has the right message");
-                ok(payload_ok($buf, @payload_params), "$p: ->send $msg has correct payload");
+                is($buf, expected_payload(@payload_params), "$p: ->send $msg has correct payload");
             }
         }
     };
@@ -222,26 +213,6 @@ sub expected_payload {
         $sender, $name, $pid, $msg;
 }
 
-sub payload_ok {
-    my ($payload, @payload_params) = @_;
-    for my $offset (0, -1, 1) {
-        my $allowed = expected_payload(@payload_params);
-        return 1 if $allowed eq $payload;
-    }
-    return 0;
-}
-
-sub allowed_payloads {
-    my @params = @_;
-    my $time = pop @params;
-    return map { expected_payload(@params, $time + $_) } (-1, 0, 1);
-}
-
-# use select so test won't block on failure
-sub wait_for_readable {
-    my $sock = shift;
-    return IO::Select->new($sock)->can_read(1);
-}
 }
 
 # vim: filetype=perl

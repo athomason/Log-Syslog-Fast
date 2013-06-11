@@ -3,46 +3,18 @@ use IO::Select;
 use IO::Socket::INET;
 use POSIX 'strftime';
 
-require 't/lib/LSFServer.pm';
-
-
-
-# old IO::Socket::INET fails with "Bad service '0'" when attempting to use
-# wildcard port
-my $port = 24767;
-sub listen_port {
-    return 0 if $IO::Socket::INET::VERSION >= 1.31;
-    diag("Using port $port for IO::Socket::INET v$IO::Socket::INET::VERSION");
-    return $port++;
-}
-
-my %servers = (
-    udp => sub {
-        my $listener = IO::Socket::INET->new(
-            Proto       => 'udp',
-            Type        => SOCK_DGRAM,
-            LocalHost   => 'localhost',
-            LocalPort   => listen_port(),
-            Reuse       => 1,
-        ) or die $!;
-        return DgramServer->new(
-            listener    => $listener,
-            proto       => LOG_UDP,
-            address     => [$listener->sockhost, $listener->sockport],
-        );
-    },
-);
+use lib 't/lib';
+use LSF;
 
 # strerror(3) messages on linux in the "C" locale are included below for reference
 
 my @params = (LOG_AUTH, LOG_INFO, 'localhost', 'test');
 
-for my $p (sort keys %servers) {
-    my $listen = $servers{$p};
+for my $p (qw(udp)) {
 
     # basic behavior
     eval {
-        my $server = $listen->();
+        my $server = make_server($p);
         ok($server->{listener}, "$p: listen") or diag("listen failed: $!");
 
         my $logger = $server->connect($CLASS => @params);
@@ -92,18 +64,6 @@ sub payload_ok {
         return 1 if $allowed eq $payload;
     }
     return 0;
-}
-
-sub allowed_payloads {
-    my @params = @_;
-    my $time = pop @params;
-    return map { expected_payload(@params, $time + $_) } (-1, 0, 1);
-}
-
-# use select so test won't block on failure
-sub wait_for_readable {
-    my $sock = shift;
-    return IO::Select->new($sock)->can_read(1);
 }
 
 1;

@@ -1,41 +1,12 @@
 # test for fix of https://rt.cpan.org/Ticket/Display.html?id=73569
 
 use Test::More tests => 2;
-use File::Temp 'tempdir';
-use IO::Select;
 use IO::Socket::INET;
-use IO::Socket::UNIX;
-use POSIX 'strftime';
 
-require 't/lib/LSFServer.pm';
+use lib 't/lib';
+use LSF;
 
-
-
-my $test_dir = tempdir(CLEANUP => 1);
-
-# old IO::Socket::INET fails with "Bad service '0'" when attempting to use
-# wildcard port
-my $port = 24767;
-sub listen_port {
-    return 0 if $IO::Socket::INET::VERSION >= 1.31;
-    diag("Using port $port for IO::Socket::INET v$IO::Socket::INET::VERSION");
-    return $port++;
-}
-
-my $listener = IO::Socket::INET->new(
-    Proto       => 'tcp',
-    Type        => SOCK_STREAM,
-    LocalHost   => 'localhost',
-    LocalPort   => listen_port(),
-    Listen      => 5,
-    Reuse       => 1,
-) or die $!;
-
-my $server = StreamServer->new(
-    listener    => $listener,
-    proto       => LOG_TCP,
-    address     => [$listener->sockhost, $listener->sockport],
-);
+my $server = make_server('tcp');
 
 ok($server->{listener}, "listen") or diag("listen failed: $!");
 

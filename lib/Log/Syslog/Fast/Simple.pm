@@ -7,12 +7,10 @@ use Log::Syslog::Fast ':all';
 use Sys::Hostname;
 
 require Exporter;
-
 our @ISA = qw(Exporter);
-
-our %EXPORT_TAGS = %Log::Syslog::Fast::EXPORT_TAGS;
-our @EXPORT_OK   = @Log::Syslog::Fast::EXPORT_OK;
 our @EXPORT      = qw();
+our %EXPORT_TAGS = %Log::Syslog::Fast::Constants::EXPORT_TAGS;
+our @EXPORT_OK   = @Log::Syslog::Fast::Constants::EXPORT_OK;
 
 use constant _LOGGERS   => 0;
 use constant _ARGS      => 1;

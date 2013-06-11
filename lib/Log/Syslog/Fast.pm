@@ -4,41 +4,14 @@ use 5.006002;
 use strict;
 use warnings;
 
-require Exporter;
-use Log::Syslog::Constants ();
-use Carp 'croak';
-
 our $VERSION = '0.61';
 
-our @ISA = qw(Log::Syslog::Constants Exporter);
-
-# protocols
-use constant LOG_UDP    => 0; # UDP
-use constant LOG_TCP    => 1; # TCP
-use constant LOG_UNIX   => 2; # UNIX socket
-
-# formats
-use constant LOG_RFC3164 => 0;
-use constant LOG_RFC5424 => 1;
-
-our %EXPORT_TAGS = (
-    protos => [qw/ LOG_TCP LOG_UDP LOG_UNIX /],
-    formats => [qw/ LOG_RFC3164 LOG_RFC5424 /],
-    %Log::Syslog::Constants::EXPORT_TAGS,
-);
-push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'protos'} };
-push @{ $EXPORT_TAGS{'all'} }, @{ $EXPORT_TAGS{'formats'} };
-
-our @EXPORT_OK = @{ $EXPORT_TAGS{'all'} };
+use Log::Syslog::Fast::Constants ':all';
+require Exporter;
+our @ISA = qw(Exporter);
 our @EXPORT = qw();
-
-sub AUTOLOAD {
-    (my $meth = our $AUTOLOAD) =~ s/.*:://;
-    if (Log::Syslog::Constants->can($meth)) {
-        return Log::Syslog::Constants->$meth(@_);
-    }
-    croak "Undefined subroutine $AUTOLOAD";
-}
+our %EXPORT_TAGS = %Log::Syslog::Fast::Constants::EXPORT_TAGS;
+our @EXPORT_OK = @Log::Syslog::Fast::Constants::EXPORT_OK;
 
 require XSLoader;
 XSLoader::load('Log::Syslog::Fast', $VERSION);

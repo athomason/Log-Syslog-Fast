@@ -1,81 +1,11 @@
+use strict;
+use warnings;
+
 use Test::More tests => 206;
-use File::Temp 'tempdir';
-use IO::Select;
-use IO::Socket::INET;
-use IO::Socket::UNIX;
+use lib 't/lib';
+use LSF;
+
 use POSIX 'strftime';
-
-require 't/lib/LSFServer.pm';
-
-
-
-my $test_dir   = tempdir(CLEANUP => 1);
-
-
-# old IO::Socket::INET fails with "Bad service '0'" when attempting to use
-# wildcard port
-my $port = 24767;
-sub listen_port {
-    return 0 if $IO::Socket::INET::VERSION >= 1.31;
-    diag("Using port $port for IO::Socket::INET v$IO::Socket::INET::VERSION");
-    return $port++;
-}
-
-my %servers = (
-    tcp => sub {
-        my $listener = IO::Socket::INET->new(
-            Proto       => 'tcp',
-            Type        => SOCK_STREAM,
-            LocalHost   => 'localhost',
-            LocalPort   => listen_port(),
-            Listen      => 5,
-            Reuse       => 1,
-        ) or die $!;
-        return StreamServer->new(
-            listener    => $listener,
-            proto       => LOG_TCP,
-            address     => [$listener->sockhost, $listener->sockport],
-        );
-    },
-    udp => sub {
-        my $listener = IO::Socket::INET->new(
-            Proto       => 'udp',
-            Type        => SOCK_DGRAM,
-            LocalHost   => 'localhost',
-            LocalPort   => listen_port(),
-            Reuse       => 1,
-        ) or die $!;
-        return DgramServer->new(
-            listener    => $listener,
-            proto       => LOG_UDP,
-            address     => [$listener->sockhost, $listener->sockport],
-        );
-    },
-    unix_stream => sub {
-        my $listener = IO::Socket::UNIX->new(
-            Local   => "$test_dir/stream",
-            Type    => SOCK_STREAM,
-            Listen  => 1,
-        ) or die $!;
-        return StreamServer->new(
-            listener    => $listener,
-            proto       => LOG_UNIX,
-            address     => [$listener->hostpath, 0],
-        );
-    },
-    unix_dgram => sub {
-        my $listener = IO::Socket::UNIX->new(
-            Local   => "$test_dir/dgram",
-            Type    => SOCK_DGRAM,
-            Listen  => 1,
-        ) or die $!;
-        return DgramServer->new(
-            listener    => $listener,
-            proto       => LOG_UNIX,
-            address     => [$listener->hostpath, 0],
-        );
-    },
-);
 
 # strerror(3) messages on linux in the "C" locale are included below for reference
 
@@ -86,17 +16,16 @@ for my $proto (LOG_TCP, LOG_UDP, LOG_UNIX) {
     like($@, qr/^Error in ->new/, "$proto: bad ->new call throws an exception");
 }
 
-for my $p (sort keys %servers) {
-    my $listen = $servers{$p};
+for my $p (qw( tcp udp unix_dgram unix_stream )) {
 
     # basic behavior
     eval {
-        my $server = $listen->();
+        my $server = make_server($p);
         ok($server->{listener}, "$p: listen") or diag("listen failed: $!");
 
-        my $logger = $server->connect($CLASS => @params);
+        my $logger = $server->connect($::CLASS => @params);
         ok($logger, "$p: ->new returns something");
-        is(ref $logger, $CLASS, "$p: ->new returns a $CLASS object");
+        is(ref $logger, $CLASS, "$p: ->new returns a $main::CLASS object");
 
         my $receiver = $server->accept;
         ok($receiver, "$p: accepted");
@@ -120,7 +49,7 @@ for my $p (sort keys %servers) {
 
                 ok($buf =~ /^<38>/, "$p: ->send $msg has the right priority");
                 ok($buf =~ /$msg$/, "$p: ->send $msg has the right message");
-                ok(payload_ok($buf, LOG_RFC3164, @payload_params), "$p: ->send $msg has correct payload");
+                is($buf, expected_payload(@payload_params, LOG_RFC3164), "$p: ->send $msg has correct payload");
             }
         }
     };
@@ -129,7 +58,7 @@ for my $p (sort keys %servers) {
     # write accessors
     eval {
 
-        my $server = $listen->();
+        my $server = make_server($p);
         my $logger = $server->connect($CLASS => @params);
 
         # ignore first connection for stream protos since reconnect is expected
@@ -174,7 +103,7 @@ for my $p (sort keys %servers) {
             ok($buf =~ /test2\[/, "$p: ->send after set_name has the right name");
             ok($buf =~ /\[12345\]/, "$p: ->send after set_name has the right pid");
             ok($buf =~ /$msg$/, "$p: ->send after accessors sends right message");
-            ok(payload_ok($buf, LOG_RFC3164, @payload_params), "$p: ->send $msg has correct payload");
+            is($buf, expected_payload(@payload_params, LOG_RFC3164), "$p: ->send $msg has correct payload");
         }
     };
     diag($@) if $@;
@@ -182,7 +111,7 @@ for my $p (sort keys %servers) {
     # RFC5424 format
     eval {
 
-        my $server = $listen->();
+        my $server = make_server($p);
         my $logger = $server->connect($CLASS => @params);
 
         # ignore first connection for stream protos since reconnect is expected
@@ -230,7 +159,7 @@ for my $p (sort keys %servers) {
             ok($buf =~ / test2 /, "$p: ->send after set_name has the right name");
             ok($buf =~ / 12345 /, "$p: ->send after set_name has the right pid");
             ok($buf =~ / $msg$/, "$p: ->send after accessors sends right message");
-            ok(payload_ok($buf, LOG_RFC5424, @payload_params), "$p: ->send $msg has correct payload");
+            is($buf, expected_payload(@payload_params, LOG_RFC5424), "$p: ->send $msg has correct payload");
         }
     };
     diag($@) if $@;
@@ -239,7 +168,7 @@ for my $p (sort keys %servers) {
     eval {
 
         # test when server is initially available but goes away
-        my $server = $listen->();
+        my $server = make_server($p);
         my $logger = $server->connect($CLASS => @params);
         $server->close();
 
@@ -294,7 +223,7 @@ for my $p (sort keys %servers) {
 
 # test LOG_UNIX with nonexistent/non-sock endpoint
 {
-    my $filename = "$test_dir/fake";
+    my $filename = test_dir . "/fake";
 
     my $fake_server = DgramServer->new(
         listener    => 1,
@@ -336,21 +265,6 @@ sub expected_payload {
         ($facility << 3) | $severity,
         strftime($time_format, localtime($time)),
         $sender, $name, $pid, $msg;
-}
-
-sub payload_ok {
-    my ($payload, $format, @payload_params) = @_;
-    for my $offset (0, -1, 1) {
-        my $allowed = expected_payload(@payload_params, $format);
-        return 1 if $allowed eq $payload;
-    }
-    return 0;
-}
-
-# use select so test won't block on failure
-sub wait_for_readable {
-    my $sock = shift;
-    return IO::Select->new($sock)->can_read(1);
 }
 
 # vim: filetype=perl
