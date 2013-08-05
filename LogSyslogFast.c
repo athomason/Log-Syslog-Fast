@@ -23,9 +23,17 @@ update_prefix(LogSyslogFast* logger, time_t t)
 
     logger->last_time = t;
 
-    /* LOG_RFC3164 time string tops out at 15 chars, LOG_RFC5424 at 24 */
-    char timestr[25];
-    strftime(timestr, 25, logger->time_format, localtime(&t));
+    /* LOG_RFC3164 time string tops out at 15 chars, LOG_RFC5424 at 25 */
+    char timestr[26];
+    strftime(timestr, 26, logger->time_format, localtime(&t));
+
+    /* %z in strftime returns 4DIGIT, but we need 2DIGIT ":" 2DIGIT */
+    if (logger->format == LOG_RFC5424) {
+        timestr[25] = 0;
+        timestr[24] = timestr[23];
+        timestr[23] = timestr[22];
+        timestr[22] = ':';
+    }
 
     logger->prefix_len = snprintf(
         logger->linebuf, logger->bufsize, logger->msg_format,
