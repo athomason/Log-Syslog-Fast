@@ -260,10 +260,13 @@ sub expected_payload {
         $time_format = "%Y-%m-%dT%H:%M:%S%z";
         $msg_format = "<%d>1 %s %s %s %d - - %s";
     }
-
+    my $timestr = strftime($time_format, localtime($time));
+    if ($format == LOG_RFC5424) {
+        $timestr =~ s/(\d{2})$/:$1/;
+    }
     return sprintf $msg_format,
         ($facility << 3) | $severity,
-        strftime($time_format, localtime($time)),
+        $timestr,
         $sender, $name, $pid, $msg;
 }
 

@@ -69,6 +69,7 @@ sub update_prefix {
     my $timestr = strftime("%h %e %T", localtime $t);
     if ($self->[FORMAT] == LOG_RFC5424) {
         $timestr = strftime("%Y-%m-%dT%H:%M:%S%z", localtime $t);
+        $timestr =~ s/(\d{2})$/:$1/; # see http://tools.ietf.org/html/rfc3339#section-5.6 time-numoffset
     }
 
     $self->[PREFIX] = sprintf "<%d>%s %s %s[%d]: ",
