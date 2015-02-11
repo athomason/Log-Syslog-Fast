@@ -1,4 +1,8 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.62   Tue Feb 10 17:53:36 PST 2015
+        - Emit strict RFC3339 timestamp in RFC5424 mode.
+          See https://github.com/athomason/Log-Syslog-Fast/pull/6
+          Thanks to Oleg Komarov, komarov@.
 0.61   Wed Oct 31 16:41:12 PDT 2012
         - Return a descriptive error on getaddrinfo failure.
 0.60   Tue Mar  6 18:00:32 PST 2012
