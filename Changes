@@ -1,4 +1,6 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.63   Thu Feb 12 13:50:33 PST 2015
+        - Fix missing MANIFEST entries
 0.62   Tue Feb 10 17:53:36 PST 2015
         - Emit strict RFC3339 timestamp in RFC5424 mode.
           See https://github.com/athomason/Log-Syslog-Fast/pull/6
