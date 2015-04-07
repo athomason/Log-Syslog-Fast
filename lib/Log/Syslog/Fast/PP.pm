@@ -30,9 +30,8 @@ use constant PREFIX_LEN => 7;
 use constant FORMAT     => 8;
 
 sub new {
-    $_[0] = __PACKAGE__ unless defined $_[0];
-
     my $ref = shift;
+    $ref = __PACKAGE__ unless defined $ref;
     my $class = ref $ref || $ref;
 
     my ($proto, $hostname, $port, $facility, $severity, $sender, $name) = @_;
