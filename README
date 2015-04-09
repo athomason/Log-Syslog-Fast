@@ -1,4 +1,4 @@
-Log-Syslog-Fast version 0.63
+Log-Syslog-Fast version 0.64
 ============================
 
 This module sends syslog messages over a network socket. It works like

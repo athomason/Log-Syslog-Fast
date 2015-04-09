@@ -1,4 +1,8 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.64   Thu Apr  9 13:41:16 PDT 2015
+        - Fix PP constructor modifying @_ in place:
+          https://github.com/athomason/Log-Syslog-Fast/pull/7
+        - Add link to github repo. Both thanks to dolmen@.
 0.63   Thu Feb 12 13:50:33 PST 2015
         - Fix missing MANIFEST entries
 0.62   Tue Feb 10 17:53:36 PST 2015

@@ -4,7 +4,7 @@ use 5.006002;
 use strict;
 use warnings;
 
-our $VERSION = '0.63';
+our $VERSION = '0.64';
 
 use Log::Syslog::Fast::Constants ':all';
 require Exporter;
