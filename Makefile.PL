@@ -14,6 +14,16 @@ WriteMakefile(
     INC               => '-I.',
     OBJECT            => 'LogSyslogFast.o Fast.o', # link all the C files too
     CCFLAGS           => '-g',
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+        resources => {
+            repository => {
+                type => 'git',
+                url  => 'https://github.com/athomason/Log-Syslog-Fast.git',
+                web  => 'https://github.com/athomason/Log-Syslog-Fast',
+            },
+        },
+    },
 );
 if  (eval {require ExtUtils::Constant; 1}) {
   # If you edit these definitions to change the constants used by this module,
