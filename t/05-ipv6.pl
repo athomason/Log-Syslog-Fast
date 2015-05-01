@@ -213,6 +213,15 @@ sub expected_payload {
         $sender, $name, $pid, $msg;
 }
 
+sub payload_ok {
+    my ($payload, @payload_params) = @_;
+    for my $offset (0, -1, 1) {
+        my $allowed = expected_payload(@payload_params);
+        return 1 if $allowed eq $payload;
+    }
+    return 0;
+}
+
 }
 
 # vim: filetype=perl
