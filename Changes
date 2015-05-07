@@ -1,4 +1,7 @@
 Revision history for Perl extension Log::Syslog::Fast.
+0.65   Thu May  7 13:41:10 PDT 2015
+        - Fix ipv6 test helper. Thanks to srezic@ for reporting #103433 and
+          sjohnston@github for the patch.
 0.64   Thu Apr  9 13:41:16 PDT 2015
         - Fix PP constructor modifying @_ in place:
           https://github.com/athomason/Log-Syslog-Fast/pull/7
