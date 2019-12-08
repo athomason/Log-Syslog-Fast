@@ -157,7 +157,7 @@ Change what is sent as the process id of the sending program.
 =item $logger-E<gt>set_format($format)
 
 Change the message format. This should be either the constant LOG_RFC3164 (the
-default) or LOG_RFC5424.
+default) or LOG_RFC5424 or LOG_RFC3164_LOCAL (without HOSTNAME).
 
 =item $logger-E<gt>get_priority()
 
