@@ -40,8 +40,8 @@ update_prefix(LogSyslogFast* logger, time_t t)
             logger->linebuf, logger->bufsize, logger->msg_format,
             logger->priority, timestr, logger->sender, logger->name, logger->pid
         );
-    } else if (logger->format == LOG_RFC3164_LOCAL) { //without sender
-         logger->prefix_len = snprintf(
+    } else if (logger->format == LOG_RFC3164_LOCAL) { /* without sender */
+        logger->prefix_len = snprintf(
             logger->linebuf, logger->bufsize, logger->msg_format,
             logger->priority, timestr, logger->name, logger->pid
         );   
@@ -203,7 +203,7 @@ LSF_set_format(LogSyslogFast* logger, int format)
         logger->msg_format = "<%d>1 %s %s %s %d - - ";
     }
     else if (logger->format == LOG_RFC3164_LOCAL) {
-        /* Same as LOG_RFC3164 but Wthout HOSTNAME */
+        /* Same as LOG_RFC3164 but without HOSTNAME */
         logger->time_format = "%h %e %H:%M:%S";
         logger->msg_format = "<%d>%s %s[%d]: ";
     }
