@@ -94,7 +94,7 @@ flexibility at the expense of additional runtime overhead.
       sender   => 'mymachine',
       name     => 'myapp',
   );
-  $logger->send("log message", time, LOG_LOCAL3, LOG_DEBUG);
+  $logger->send("log message", time, LOG_DEBUG, LOG_LOCAL3);
 
 =head1 DESCRIPTION
 
